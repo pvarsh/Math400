@@ -101,6 +101,7 @@ def addVectors(A,B):
         return()
     return([A[i]+B[i] for i in range(len(A))])
 
+### PV: why create a new matrix N?
 def swaprows(M,i,j):
     "swap rows i and j in matrix M"
     N=copyMatrix(M)
@@ -113,6 +114,7 @@ def copyMatrix(M):
     return([[M[row][col] for col in range(cols(M))]for row in
             range(rows(M))])
 
+### PV: why create a new matrix N?
 def addrows(M, f, t, scale=1):
     "add scale times row f to row t"
     N=copyMatrix(M)
@@ -184,6 +186,15 @@ def findPivotrow1(mat,col):
         if mat[row][col] != 0:
             return(row)
     return(-1)
+
+def findPivotPS(mat, col):
+    "Partial pivot by Peter Varshavsky"
+    values = [mat[row][col] for row in range(col, rows(mat))]
+    maxIndex = max(range(len(values)), key = lambda i: abs(values[i]))
+    if abs(values[maxIndex]) > 0:
+        return(maxIndex + col)
+    else:
+        return(-1)
 
 
 def rowReduce(M):
