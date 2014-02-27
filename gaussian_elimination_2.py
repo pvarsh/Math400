@@ -187,7 +187,7 @@ def findPivotrow1(mat,col):
             return(row)
     return(-1)
 
-def findPivotPS(mat, col):
+def findPivotPP(mat, col):
     "Partial pivot by Peter Varshavsky"
     values = [mat[row][col] for row in range(col, rows(mat))]
     maxIndex = max(range(len(values)), key = lambda i: abs(values[i]))
@@ -196,6 +196,23 @@ def findPivotPS(mat, col):
     else:
         return(-1)
 
+def findPivotSPP(mat, col):
+    "Scaled partial pivot by Peter Varshavsky"
+    pass
+
+def findScaleFactors(M):
+    "Scale factors by Peter Varshavsky"
+    "Returns a vector of scale factors for matrix M"
+    
+    ncols = cols(M)
+    print("ncols: ", ncols)
+    print("nrows: ", rows(M))
+    if rows(M) == ncols:
+        s = [max(row) for row in M]
+    else:
+        s = [max(row[0:ncols-1]) for row in M]
+    return(s)
+
 
 def rowReduce(M):
     "return row reduced version of M"
@@ -203,7 +220,8 @@ def rowReduce(M):
     cs = cols(M)-2   # no need to consider last two cols
     rs = rows(M)
     for col in range(cs+1):
-        j = findPivotrow1(N,col)
+        # j = findPivotrow1(N,col) # Naive Gaussian Elimination
+        j = findPivotPP(N, col) # Partial Pivoting
         if j < 0:
             print("\nrowReduce: No pivot found for column index %d "%(col))
             return(N)
@@ -284,7 +302,6 @@ aug_2 = [[ 1, -1,  2, -1,  8],
          [ 0,  0,  2,  2, 12]]
 
 
-"""
 
 def showProcess(A,S):
     "given matrix A and vector S, get B=AS and show solve for S"
@@ -333,9 +350,5 @@ def showProcess(A,S):
     print("\nge_1(aug_2)[1] is %s"%(outputlist[1]))
 
 showProcess(A,C)
-
-"""
-
-
 
 
