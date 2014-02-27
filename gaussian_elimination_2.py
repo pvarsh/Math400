@@ -102,12 +102,18 @@ def addVectors(A,B):
     return([A[i]+B[i] for i in range(len(A))])
 
 ### PV: why create a new matrix N?
-def swaprows(M,i,j):
+def swaprows(M,i,j, s = None):
     "swap rows i and j in matrix M"
+    "PV: added scale factor swapping" 
     N=copyMatrix(M)
     T = N[i]
     N[i] = N[j]
     N[j] = T
+
+    # Swap scale factors
+    if s != None:
+        s[i], s[j] = s[j], s[i]
+    
     return N
 
 def copyMatrix(M):
@@ -124,8 +130,12 @@ def addrows(M, f, t, scale=1):
     
 def show(mat):
     "Print out matrix"
+    outString = ""
+##    for row in mat:
+##        print(row)
     for row in mat:
-        print(row)
+        outString = outString + str(row) + "\n"
+    print outString
 
 ### vectors vs rowVectors and colVectors
 ### the latter are matrices
@@ -196,21 +206,20 @@ def findPivotPP(mat, col):
     else:
         return(-1)
 
-def findPivotSPP(mat, col):
+def findPivotSPP(mat, col, s):
     "Scaled partial pivot by Peter Varshavsky"
-    pass
+    values = [mat[row][col]/s[row] for row in range(col, rows(mat))]
+    print("Values in SPP: ", values)
 
-def findScaleFactors(M):
+def scaleFactors(mat):
     "Scale factors by Peter Varshavsky"
     "Returns a vector of scale factors for matrix M"
     
-    ncols = cols(M)
-    print("ncols: ", ncols)
-    print("nrows: ", rows(M))
-    if rows(M) == ncols:
-        s = [max(row) for row in M]
+    ncols = cols(mat)
+    if rows(mat) == ncols:
+        s = [abs(max(row, key = lambda x: abs(x))) for row in mat] # must change for absolute values
     else:
-        s = [max(row[0:ncols-1]) for row in M]
+        s = [abs(max(row[0:-1], key = lambda x: abs(x))) for row in mat]
     return(s)
 
 
@@ -219,15 +228,18 @@ def rowReduce(M):
     N = copyMatrix(M)
     cs = cols(M)-2   # no need to consider last two cols
     rs = rows(M)
+    s = scaleFactors(M)
     for col in range(cs+1):
         # j = findPivotrow1(N,col) # Naive Gaussian Elimination
         j = findPivotPP(N, col) # Partial Pivoting
+        findPivotSPP(N, col, s)
         if j < 0:
             print("\nrowReduce: No pivot found for column index %d "%(col))
             return(N)
         else:
             if j != col:
-                N = swaprows(N,col,j)
+                N = swaprows(N,col,j, s)
+                print("s: ", s)
             scale = -1.0 / N[col][col]
             for row in range(col+1,rs):                
                 N=addrows(N, col, row, scale * N[row][col])
@@ -351,4 +363,9 @@ def showProcess(A,S):
 
 showProcess(A,C)
 
+### Peter testing things
+BB = augment(A, [-20, -40, 60])
+
+print "Scale factors augmented A: ", scaleFactors(BB)
+print "Scale factors not augmented A: ", scaleFactors(A)
 
