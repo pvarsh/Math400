@@ -223,7 +223,7 @@ def findPivotSPP(mat, col, s):
     values = [float(abs(mat[row][col]))/s[row] for row in range(col, rows(mat))]
     #print("Scale factors in SPP: ", s)
     #print("First column values in SPP: ", getCol(mat, 0))
-    print("Values in SPP: ", values)
+    #print("Values in SPP: ", values)
     
     if max(values) > 0:
         return col + max(range(len(values)), key = lambda i: values[i])
@@ -249,10 +249,10 @@ def rowReduce(M, pivotStrat = "naive"):
     cs = cols(M)-2   # no need to consider last two cols
     rs = rows(M)
     s = scaleFactors(M)
-    print("Scale factors: %s" %s)
+    #print("Scale factors: %s" %s)
     
     for col in range(cs+1):
-        print("Col: %s" %col)
+        #print("Col: %s" %col)
         # find pivot
         if pivotStrat == "naive":
             #print "\nExecuting naive"
@@ -329,22 +329,30 @@ def residueTest(mat, b, sol):
     "Error testing by Peter Varshavsky"
     "Returns a list with two components:"
     "a list of residues"
-    ""
+    
+    """
     prod = getCol(matMult(mat, vec2colVec(sol)), 0)
 
-    print type(prod)
-    
-    print type(b)
     residues = subVectors(b, prod)
     error = sqrt(dot(residues, residues))
     print "Error: ", error
 
     return [residues, error]
+    """
+    #show(sol)
+    #show(vec2colVec(sol))
+
+    prod = colVec2vec(matMult(mat, vec2colVec(sol))) # mat * sol
+    
+    residues = subVectors(b, prod)
+    error = sqrt(dot(residues, residues))
+    print "Solution: ", sol
+    print "Error: %s" %error
 
 
 ### Some Testing code begins here.
 
-A= [[4,-2,1],
+A = [[4,-2,1],
     [-2,4,-2],
     [1,-2,4]]
 
@@ -422,23 +430,45 @@ def showProcess(A,S):
     show(outputlist[0])
     print("\nge_1(aug_2)[1] is %s"%(outputlist[1]))
 
-showProcess(A,C)
+#showProcess(A,C)
 
 ### Peter testing things
 
+### Testing a matrix from internet
 """
+Aint = [[ 6,  -2, 2,   4],
+        [12,  -8, 6,  10],
+        [3, -13, 9,   3],
+        [-6,   4, 1, -18 ]]
+
+bint  = [0.23, 0.32, 0.33, 0.31]
+ansint = ge_1(augment(Aint, bint), pivotStrat = "scaled partial")
+residueTest(Aint, bint, ansint[1])
+"""
+
 ### Exercise 2
+
 A2 = [[10, 10, 10, 10**17],
      [1, 10**(-3), 10**(-3), 10**(-3)],
      [1, 1, 10**(-3), 10**(-3)],
      [1, 1, 1, 10**(-3)]]
+
 b2 = [10**17, 1, 2, 3]
 augA2 = augment(A2, b2)
 
 ans2 = ge_1(augA2, pivotStrat = "naive")
+residueTest(A2, b2, ans2[1])
 ans2a = ge_1(augA2, pivotStrat = "partial")
+residueTest(A2, b2, ans2a[1])
 ans2b = ge_1(augA2, pivotStrat = "scaled partial")
-"""
+residueTest(A2, b2, ans2b[1])
+print("Answer with naive", ans2[1])
+print("Answer with PP", ans2a[1])
+print("Answer with SPP", ans2b[1])
+ans2wa = [-0.003125, 2.002, 2.002, 1.0]
+residueTest(A2, b2, ans2wa)
+
+
 
 
 """
@@ -463,3 +493,11 @@ show(A)
 for strategy in ["scaled partial"]:
     show(rowReduce(A, pivotStrat = strategy))
 """
+
+import sympy
+import numpy as np
+print(sympy.Matrix(np.random.random((4,5))).rref())
+A2sym = sympy.Matrix(augA2).rref()
+ansA2sym = [1.99609375, 0, 2, 1]
+residueTest(A2, b2, ansA2sym)
+
