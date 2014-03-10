@@ -26,6 +26,8 @@ vector example [28, 12, 20, 28]
 
 """
 
+from math import sqrt
+
 
 def rows(mat):
     "return number of rows"
@@ -100,6 +102,14 @@ def addVectors(A,B):
         print("addVectors: different lengths")
         return()
     return([A[i]+B[i] for i in range(len(A))])
+
+def subVectors(A, B):
+    "subtract two vectors"
+    "Peter Varshavsky"
+    if len(A) != len(B):
+        print("subVectors: different lengths")
+        return()
+    return([A[i] - B[i] for i in range(len(A))])
 
 ### PV: why create a new matrix N?
 def swaprows(M,i,j, s = None):
@@ -208,9 +218,18 @@ def findPivotPP(mat, col):
 
 def findPivotSPP(mat, col, s):
     "Scaled partial pivot by Peter Varshavsky"
-    values = [mat[row][col]/s[row] for row in range(col, rows(mat))]
+    "unfinished"
+    
+    values = [float(abs(mat[row][col]))/s[row] for row in range(col, rows(mat))]
+    #print("Scale factors in SPP: ", s)
+    #print("First column values in SPP: ", getCol(mat, 0))
     print("Values in SPP: ", values)
-
+    
+    if max(values) > 0:
+        return col + max(range(len(values)), key = lambda i: values[i])
+    else:
+        return(-1)
+    
 def scaleFactors(mat):
     "Scale factors by Peter Varshavsky"
     "Returns a vector of scale factors for matrix M"
@@ -223,26 +242,41 @@ def scaleFactors(mat):
     return(s)
 
 
-def rowReduce(M):
+def rowReduce(M, pivotStrat = "naive"):
     "return row reduced version of M"
+    "PV: added pivot strategy parameter"
     N = copyMatrix(M)
     cs = cols(M)-2   # no need to consider last two cols
     rs = rows(M)
     s = scaleFactors(M)
+    print("Scale factors: %s" %s)
+    
     for col in range(cs+1):
-        # j = findPivotrow1(N,col) # Naive Gaussian Elimination
-        j = findPivotPP(N, col) # Partial Pivoting
-        findPivotSPP(N, col, s)
+        print("Col: %s" %col)
+        # find pivot
+        if pivotStrat == "naive":
+            #print "\nExecuting naive"
+            j = findPivotrow1(N,col) # Naive Gaussian Elimination
+        elif pivotStrat == "partial":
+            #print "\nExecuting partial"
+            j = findPivotPP(N, col) # Partial Pivoting
+        elif pivotStrat == "scaled partial":
+            #print "\nExecuting scaled partial"
+            j = findPivotSPP(N, col, s)
+        else:
+            print("\nrowReduce: pivotStrat parameter value not accepted")
+
+        # swap rows
         if j < 0:
             print("\nrowReduce: No pivot found for column index %d "%(col))
             return(N)
         else:
             if j != col:
                 N = swaprows(N,col,j, s)
-                print("s: ", s)
             scale = -1.0 / N[col][col]
-            for row in range(col+1,rs):                
-                N=addrows(N, col, row, scale * N[row][col])
+            for row in range(col+1, rs):
+                N = addrows(N, col, row, scale * N[row][col])
+                
     return(N)
 
 
@@ -274,7 +308,7 @@ def diag_test(mat):
         return(True)
 
 
-def ge_1(aug):    
+def ge_1(aug, pivotStrat = "naive"):    
     """
     Given an augmented matrix it returns a list.  The [0]
     element is the row-reduced augmented matrix, and 
@@ -282,7 +316,7 @@ def ge_1(aug):
     vector is empty if there is no unique solution.
     
     """
-    aug_n = rowReduce(aug)
+    aug_n = rowReduce(aug, pivotStrat)
     if diag_test(aug_n):
         sol = backSub(aug_n)
     else:
@@ -290,6 +324,22 @@ def ge_1(aug):
         sol = []
     results = [aug_n, sol]
     return(results)
+
+def residueTest(mat, b, sol):
+    "Error testing by Peter Varshavsky"
+    "Returns a list with two components:"
+    "a list of residues"
+    ""
+    prod = getCol(matMult(mat, vec2colVec(sol)), 0)
+
+    print type(prod)
+    
+    print type(b)
+    residues = subVectors(b, prod)
+    error = sqrt(dot(residues, residues))
+    print "Error: ", error
+
+    return [residues, error]
 
 
 ### Some Testing code begins here.
@@ -316,7 +366,14 @@ aug_2 = [[ 1, -1,  2, -1,  8],
 
 
 def showProcess(A,S):
+    pivotStr = "scaled partial"
+    print("\n***********************************************")
+    print pivotStr
+    print("***********************************************")
+    
     "given matrix A and vector S, get B=AS and show solve for S"
+
+    print("\n***********************************************")
     print("A")
     show(A)
     print("S=%s"%(S))
@@ -325,24 +382,26 @@ def showProcess(A,S):
     AS = augment(A,colVec2vec(B))
     print("augment(A,A*S)=")
     show(AS)
-    Ar=rowReduce(AS)
+    Ar=rowReduce(AS, pivotStr)
     print("row reduced Ar=")
     show(Ar)
     sol = backSub(Ar)
     print("solution is %s"% sol)
+    
+    print("\n***********************************************")
     print("aug = ")
     show(aug)
     aug_n = rowReduce(aug)
     print("aug_n = ")
     show(aug_n)
-    print("the solution from ge_1(aug) is %s"%(ge_1(aug)[1]))
+    print("the solution from ge_1(aug) is %s"%(ge_1(aug, pivotStr)[1]))
     print("\naug = ")
     show(aug)
     L = getAandb(aug)
     print("\nA = ")
     show(L[0])
-    print("\nb = %s"%(L[1]))
-    y = ge_1(aug)[1]
+    print("\nb = %s" %(L[1]))
+    y = ge_1(aug, pivotStr)[1]
     print("\ny = ge_1(aug)[1] = %s"%(y))
     x_vec =  vec2rowVec(y)
     print("\nx_row_vec = %s"%(x_vec))
@@ -351,12 +410,14 @@ def showProcess(A,S):
     Ax = matMult(L[0],x)
     print("\nAx = %s"%(Ax))
     print("\nAx_vec = %s"%(colVec2vec(Ax)))
-    x_col_vec = vec2colVec(ge_1(aug)[1])
-    L = checkSol_1(aug,ge_1(aug)[1])
+    x_col_vec = vec2colVec(ge_1(aug, pivotStr)[1])
+    L = checkSol_1(aug,ge_1(aug, pivotStr)[1])
     print("\n Ax = %s, \nb = %s, \nr = %s"%(L[0],L[1],L[2]))
+    
+    print("\n***********************************************")
     print("\naug_2 = ")
     show(aug_2)
-    outputlist = ge_1(aug_2)
+    outputlist = ge_1(aug_2, pivotStr)
     print("\naug_2_n = ge_1(aug_2)[0] = \n")
     show(outputlist[0])
     print("\nge_1(aug_2)[1] is %s"%(outputlist[1]))
@@ -364,8 +425,41 @@ def showProcess(A,S):
 showProcess(A,C)
 
 ### Peter testing things
-BB = augment(A, [-20, -40, 60])
 
-print "Scale factors augmented A: ", scaleFactors(BB)
-print "Scale factors not augmented A: ", scaleFactors(A)
+"""
+### Exercise 2
+A2 = [[10, 10, 10, 10**17],
+     [1, 10**(-3), 10**(-3), 10**(-3)],
+     [1, 1, 10**(-3), 10**(-3)],
+     [1, 1, 1, 10**(-3)]]
+b2 = [10**17, 1, 2, 3]
+augA2 = augment(A2, b2)
 
+ans2 = ge_1(augA2, pivotStrat = "naive")
+ans2a = ge_1(augA2, pivotStrat = "partial")
+ans2b = ge_1(augA2, pivotStrat = "scaled partial")
+"""
+
+
+"""
+print "******************************************"
+print "residue test naive: ", residueTest(A2, b2, ans2[1])
+print "******************************************"
+print "residue test partial pivoting: ", residueTest(A2, b2, ans2a[1])
+print "******************************************"
+print "residue test scaled partial pivoting: ", residueTest(A2, b2, ans2b[1])
+print "******************************************"
+"""
+"""
+print checkSol_1(augA2, ans2[1])[2]
+print checkSol_1(augA2, ans2a[1])[2]
+print checkSol_1(augA2, ans2b[1])[2]
+"""
+"""
+pivotStrats = ["naive", "partial", "scaled partial"]
+
+print "SOME TESTS"
+show(A)
+for strategy in ["scaled partial"]:
+    show(rowReduce(A, pivotStrat = strategy))
+"""
