@@ -329,18 +329,6 @@ def residueTest(mat, b, sol):
     "Error testing by Peter Varshavsky"
     "Returns a list with two components:"
     "a list of residues"
-    
-    """
-    prod = getCol(matMult(mat, vec2colVec(sol)), 0)
-
-    residues = subVectors(b, prod)
-    error = sqrt(dot(residues, residues))
-    print "Error: ", error
-
-    return [residues, error]
-    """
-    #show(sol)
-    #show(vec2colVec(sol))
 
     prod = colVec2vec(matMult(mat, vec2colVec(sol))) # mat * sol
     
@@ -434,70 +422,41 @@ def showProcess(A,S):
 
 ### Peter testing things
 
-### Testing a matrix from internet
-"""
-Aint = [[ 6,  -2, 2,   4],
-        [12,  -8, 6,  10],
-        [3, -13, 9,   3],
-        [-6,   4, 1, -18 ]]
+def exercise2():
+    A2 = [[10, 10, 10, 10**17],
+          [1, 10**(-3), 10**(-3), 10**(-3)],
+          [1, 1, 10**(-3), 10**(-3)],
+          [1, 1, 1, 10**(-3)]]
 
-bint  = [0.23, 0.32, 0.33, 0.31]
-ansint = ge_1(augment(Aint, bint), pivotStrat = "scaled partial")
-residueTest(Aint, bint, ansint[1])
-"""
+    b2 = [10**17, 1, 2, 3]
+    augA2 = augment(A2, b2)
 
-### Exercise 2
-
-A2 = [[10, 10, 10, 10**17],
-     [1, 10**(-3), 10**(-3), 10**(-3)],
-     [1, 1, 10**(-3), 10**(-3)],
-     [1, 1, 1, 10**(-3)]]
-
-b2 = [10**17, 1, 2, 3]
-augA2 = augment(A2, b2)
-
-ans2 = ge_1(augA2, pivotStrat = "naive")
-residueTest(A2, b2, ans2[1])
-ans2a = ge_1(augA2, pivotStrat = "partial")
-residueTest(A2, b2, ans2a[1])
-ans2b = ge_1(augA2, pivotStrat = "scaled partial")
-residueTest(A2, b2, ans2b[1])
-print("Answer with naive", ans2[1])
-print("Answer with PP", ans2a[1])
-print("Answer with SPP", ans2b[1])
-ans2wa = [-0.003125, 2.002, 2.002, 1.0]
-residueTest(A2, b2, ans2wa)
+    ans2 = ge_1(augA2, pivotStrat = "naive")
+    residueTest(A2, b2, ans2[1])
+    ans2a = ge_1(augA2, pivotStrat = "partial")
+    residueTest(A2, b2, ans2a[1])
+    ans2b = ge_1(augA2, pivotStrat = "scaled partial")
+    residueTest(A2, b2, ans2b[1])
+    print("Answer with naive", ans2[1])
+    print("Answer with PP", ans2a[1])
+    print("Answer with SPP", ans2b[1])
+    ans2wa = [-0.003125, 2.002, 2.002, 1.0]
+    residueTest(A2, b2, ans2wa)
 
 
 
+def exercise2sympy():
+    import sympy
+    import numpy as np
+    A2 = [[10, 10, 10, 10**17],
+          [1, 10**(-3), 10**(-3), 10**(-3)],
+          [1, 1, 10**(-3), 10**(-3)],
+          [1, 1, 1, 10**(-3)]]
 
-"""
-print "******************************************"
-print "residue test naive: ", residueTest(A2, b2, ans2[1])
-print "******************************************"
-print "residue test partial pivoting: ", residueTest(A2, b2, ans2a[1])
-print "******************************************"
-print "residue test scaled partial pivoting: ", residueTest(A2, b2, ans2b[1])
-print "******************************************"
-"""
-"""
-print checkSol_1(augA2, ans2[1])[2]
-print checkSol_1(augA2, ans2a[1])[2]
-print checkSol_1(augA2, ans2b[1])[2]
-"""
-"""
-pivotStrats = ["naive", "partial", "scaled partial"]
-
-print "SOME TESTS"
-show(A)
-for strategy in ["scaled partial"]:
-    show(rowReduce(A, pivotStrat = strategy))
-"""
-
-import sympy
-import numpy as np
-print(sympy.Matrix(np.random.random((4,5))).rref())
-A2sym = sympy.Matrix(augA2).rref()
-ansA2sym = [1.99609375, 0, 2, 1]
-residueTest(A2, b2, ansA2sym)
+    b2 = [10**17, 1, 2, 3]
+    augA2 = augment(A2, b2)
+    
+    A2sym = sympy.Matrix(augA2).rref()
+    ansA2sym = [1.99609375, 0, 2, 1]
+    residueTest(A2, b2, ansA2sym)
 
