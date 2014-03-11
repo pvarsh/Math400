@@ -28,6 +28,14 @@ vector example [28, 12, 20, 28]
 
 from math import sqrt
 
+def show(mat):
+    "Print out matrix"
+    outString = ""
+##    for row in mat:
+##        print(row)
+    for row in mat:
+        outString = outString + str(row) + "\n"
+    print outString
 
 def rows(mat):
     "return number of rows"
@@ -67,6 +75,28 @@ def getCol(mat, col):
 def getRow(mat, row):
     "return row row from matrix mat"
     return(mat[row])
+
+def setCol(mat, k, vec):
+    "set kth column of matrix to be equal to vec"
+    "operates in place"
+    "vec must be a list of numbers, although the function does not check for this"
+    for i in range(rows(mat)):
+        mat[i][k] = vec[i]
+
+def setRow(mat, k, vec):
+    "seths kth row of matrix to be equal to vec"
+    "operates in place"
+    "vec must be a list of numbers of correct length"
+    mat[k] = vec
+
+def setDiagonal(mat, value):
+    "sets each value on major diagonal to value"
+    for row in range(rows(mat)):
+        mat[row][row] = value
+
+def identity(n):
+    "creates nxn identity matrix"
+    return [[0 if col != row else 1 for col in range(n)] for row in range(n)]
 
 def matMult(mat1,mat2):
     "multiply two matrices"
@@ -138,14 +168,7 @@ def addrows(M, f, t, scale=1):
     N[t]=T
     return(N)
     
-def show(mat):
-    "Print out matrix"
-    outString = ""
-##    for row in mat:
-##        print(row)
-    for row in mat:
-        outString = outString + str(row) + "\n"
-    print outString
+
 
 ### vectors vs rowVectors and colVectors
 ### the latter are matrices
@@ -279,6 +302,87 @@ def rowReduce(M, pivotStrat = "naive"):
                 
     return(N)
 
+def LUfactorize(M):
+    "Author: Peter Varshavsky"
+    "Returns a list [L, U]"
+    "Has no checks for whether factorization is possible"
+
+    cs = cols(M)-2
+    rs = rows(M)
+
+    L = identity(rs)
+    U = copyMatrix(M)
+
+    for col in range(cols(M)):
+        atomic = identity(rs)
+        atomic1 = identity(rs)
+        
+        for row in range(col+1, rs):
+            "it seems redundant to use two atomic matrices"
+            "one for knocking out columns in U"
+            "and one to keep in L"
+            atomic[row][col] = -U[row][col] / U[col][col]
+            atomic1[row][col] = U[row][col] / U[col][col]
+            
+        U = matMult(atomic, U)
+        L = matMult(L, atomic1)
+    
+    return([L, U])
+
+def example2():
+    print "************ EXAMPLE 2 FROM PAGE 404"
+    A = [[1, 1, 0, 3],
+         [2, 1,-1, 1],
+         [3,-1,-1, 2],
+         [-1,2, 3,-1]]
+    L1 = [[1,0,0,0],
+          [2,1,0,0],
+          [3,4,1,0],
+          [-1,-3,0,1]]
+
+    
+    U1 = [[1,1,0,3],
+          [0,-1,-1,-5],
+          [0,0,3,13],
+          [0,0,0,-13]]
+    
+    #show(matMult(L1, U1))
+    show(A)
+    LU = LUfactorize(A)
+    show(LU[0])
+    show(LU[1])
+    show(matMult(LU[0], LU[1]))
+    print "*********** \EXAMPLE 2 FROM PAGE 404"
+
+example2()
+
+"""
+A = [[1, 1, 0, 3],
+     [2, 1,-1, 1],
+     [3,-1,-1, 2],
+     [-1,2, 3,-1]]
+
+L1 = [[1, 0, 0, 0],
+      [-2, 1, 0, 0],
+      [-3, 0, 1, 0],
+      [1, 0, 0, 1]]
+
+L2 = [[1, 0, 0, 0],
+      [0, 1, 0, 0],
+      [0, 1, 1, 0],
+      [0, -2, 0, 1]]
+
+L3 = [[1,0,0,0],
+      [0,1,0,0],
+      [0,0,1,0],
+      [0,0,3,1]]
+show(matMult(L3, A))
+show(matMult(L1, L2))
+print "grr"
+show(matMult(matMult(L1, L2), L3))
+show(matMult(L2, A))
+show(matMult(L2, matMult(L1, A)))
+"""
 
 def backSub(M):
     """
