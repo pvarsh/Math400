@@ -26,8 +26,12 @@ vector example [28, 12, 20, 28]
 
 """
 
+# one way:
+
+
 from math import sqrt
 from decimal import *
+
 
 def show(mat):
     "Print out matrix"
@@ -170,10 +174,8 @@ def addrows(M, f, t, scale=1):
     return(N)
 
 def mat2decimal(mat):
+    "Convert matrix to decimal"
     return [[Decimal(col) for col in row] for row in mat]
-
-A = [[1,2],[3,4]]
-show(mat2decimal(A))
 
 ### vectors vs rowVectors and colVectors
 ### the latter are matrices
@@ -618,7 +620,7 @@ def exercise2dec():
     #residueTest(A2, b2, ans2wa)
 
 getcontext().prec = 20
-exercise2dec()
+#exercise2dec()
 
 def exercise2sympy():
     import sympy
