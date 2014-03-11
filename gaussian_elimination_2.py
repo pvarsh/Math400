@@ -617,6 +617,7 @@ def exercise2dec():
 ##    #ans2wa = [-0.003125, 2.002, 2.002, 1.0]
     #residueTest(A2, b2, ans2wa)
 
+getcontext().prec = 20
 exercise2dec()
 
 def exercise2sympy():
