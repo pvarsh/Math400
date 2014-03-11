@@ -27,6 +27,7 @@ vector example [28, 12, 20, 28]
 """
 
 from math import sqrt
+from decimal import *
 
 def show(mat):
     "Print out matrix"
@@ -167,8 +168,12 @@ def addrows(M, f, t, scale=1):
     T=addVectors(scalarMult(scale,N[f]),N[t])
     N[t]=T
     return(N)
-    
 
+def mat2decimal(mat):
+    return [[Decimal(col) for col in row] for row in mat]
+
+A = [[1,2],[3,4]]
+show(mat2decimal(A))
 
 ### vectors vs rowVectors and colVectors
 ### the latter are matrices
@@ -243,7 +248,7 @@ def findPivotSPP(mat, col, s):
     "Scaled partial pivot by Peter Varshavsky"
     "unfinished"
     
-    values = [float(abs(mat[row][col]))/s[row] for row in range(col, rows(mat))]
+    values = [Decimal(abs(mat[row][col]))/s[row] for row in range(col, rows(mat))]
     #print("Scale factors in SPP: ", s)
     #print("First column values in SPP: ", getCol(mat, 0))
     #print("Values in SPP: ", values)
@@ -296,7 +301,7 @@ def rowReduce(M, pivotStrat = "naive"):
         else:
             if j != col:
                 N = swaprows(N,col,j, s)
-            scale = -1.0 / N[col][col]
+            scale = Decimal(-1.0) / N[col][col] # decimal
             for row in range(col+1, rs):
                 N = addrows(N, col, row, scale * N[row][col])
                 
@@ -329,6 +334,9 @@ def LUfactorize(M):
     
     return([L, U])
 
+
+
+    
 def example2():
     print "************ EXAMPLE 2 FROM PAGE 404"
     A = [[1, 1, 0, 3],
@@ -354,7 +362,7 @@ def example2():
     show(matMult(LU[0], LU[1]))
     print "*********** \EXAMPLE 2 FROM PAGE 404"
 
-example2()
+#example2()
 
 """
 A = [[1, 1, 0, 3],
@@ -526,6 +534,36 @@ def showProcess(A,S):
 
 ### Peter testing things
 
+    
+def testDecimal():
+    A = [[1, 1, 0, 3],
+         [2, 1,-1, 1],
+         [3,-1,-1, 2],
+         [-1,2, 3,-1]]
+
+
+    b2 = [1,2,3,4]
+    Aaug = augment(A, b2)
+    Adec = mat2decimal(Aaug)
+
+    ans = ge_1(Adec)
+    print "\nAnswer: \n",ans[1]
+
+
+##    ans2 = ge_1(augA2, pivotStrat = "naive")
+##    residueTest(A2, b2, ans2[1])
+##    ans2a = ge_1(augA2, pivotStrat = "partial")
+##    residueTest(A2, b2, ans2a[1])
+##    ans2b = ge_1(augA2, pivotStrat = "scaled partial")
+##    residueTest(A2, b2, ans2b[1])
+##    print("Answer with naive", ans2[1])
+##    print("Answer with PP", ans2a[1])
+##    print("Answer with SPP", ans2b[1])
+##    ans2wa = [-0.003125, 2.002, 2.002, 1.0]
+##    residueTest(A2, b2, ans2wa)
+    
+
+
 def exercise2():
     A2 = [[10, 10, 10, 10**17],
           [1, 10**(-3), 10**(-3), 10**(-3)],
@@ -547,7 +585,39 @@ def exercise2():
     ans2wa = [-0.003125, 2.002, 2.002, 1.0]
     residueTest(A2, b2, ans2wa)
 
+#exercise2()
 
+def decVec2float(vec):
+    return [float(v) for v in vec]
+
+def exercise2dec():
+    A2 = [[10, 10, 10, 10**17],
+          [1, 10**(-3), 10**(-3), 10**(-3)],
+          [1, 1, 10**(-3), 10**(-3)],
+          [1, 1, 1, 10**(-3)]]
+
+    b2 = [10**17, 1, 2, 3]
+    augA2 = augment(A2, b2)
+    augA2dec = mat2decimal(augA2)
+    
+    ans2 = ge_1(augA2dec, pivotStrat = "scaled partial")
+    print(decVec2float(ans2[1]))
+    residueTest(A2, b2, decVec2float(ans2[1]))
+##    residueTest(A2, b2, decVec2float(ans2[1]))
+##    
+##    ans2a = ge_1(augA2dec, pivotStrat = "partial")
+##    residueTest(A2, b2, decVec2float(ans2a[1]))
+##    
+##    ans2b = ge_1(augA2dec, pivotStrat = "scaled partial")
+##    residueTest(A2, b2, decVec2float(ans2b[1]))
+##    
+##    print("Answer with naive", ans2[1])
+##    print("Answer with PP", ans2a[1])
+##    print("Answer with SPP", ans2b[1])
+##    #ans2wa = [-0.003125, 2.002, 2.002, 1.0]
+    #residueTest(A2, b2, ans2wa)
+
+exercise2dec()
 
 def exercise2sympy():
     import sympy
