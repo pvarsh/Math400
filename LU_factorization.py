@@ -10,9 +10,10 @@ def partialDotProduct(vec1, vec2, kmax):
     return dot(vec1[0:kmax], vec2[0:kmax])
 
 def LUfactorize_(A):
-    n = rows(A)
-    L = identity(n)
-    U = zero(n,n)
+    
+    n = rows(A) - 1
+    L = identity(n + 1)
+    U = zero(n+1,n+1)
 
     # Step 1
     print("Step 1")
@@ -33,28 +34,27 @@ def LUfactorize_(A):
 
     # Step 3
     print("Step 3")
-    for i in range(1, n-1):
+    for i in range(1, n):
         
 
         # Step 4
         print("Step 4")
-
         U[i][i] = (A[i][i] - partialDotProduct(getRow(L, i), getCol(U, i), i-1))/L[i][i]
 ##      print "Weird error in LUfactorize_"
 ##      print "Factorization impossible or something"
 ##      return(-1)
         if U[i][i]*L[i][i] == 0:
             print "Factorization impossible"
-            return(-1)
+            return None
         else:
             # Step 5
             print("Step 5")
-            for j in range(i+1, n):
+            for j in range(i+1, n+1):
                 U[i][j] = (1.0 / L[i][i]) * (A[i][j] - partialDotProduct(getRow(L, i), getCol(U, j), i-1)) 
-                L[j][i] = (1.0 / U[i][i]) * (A[j][i] - partialDotProduct(getRow(L, j), getCol(U, i), i-1)
-)
+                L[j][i] = (1.0 / U[i][i]) * (A[j][i] - partialDotProduct(getRow(L, j), getCol(U, i), i-1))
     # Step 6
-    print("Step 6 not written")
+    print("Step 6")
+    U[n][n] = A[n][n] - partialDotProduct(getRow(L, n), getCol(U, n), n)
 
     # Step 7
     return([L, U])
