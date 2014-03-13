@@ -1,13 +1,15 @@
 """
 LU factorization
 Author: Peter Varshavsky
+LUfactorize() is the exact implementation of LU Factorization algorithm from
+    page 406 of Numerical Analysis 9th ED by Richard Burden
 Started: 3/10/14
 """
 
 from gaussian_elimination_2 import *
 
 def partialDotProduct(vec1, vec2, kmax):
-    return dot(vec1[0:kmax], vec2[0:kmax])
+    return dot(vec1[0:kmax+1], vec2[0:kmax+1])
 
 def LUfactorize_(A):
     
@@ -24,7 +26,7 @@ def LUfactorize_(A):
 
     # Step 2
     print("Step 2")
-    for j in range(1, n):
+    for j in range(1, n+1):
         U[0][j] = float(A[0][j])/L[0][0]
         print "\nU: "
         show(U)
@@ -35,8 +37,6 @@ def LUfactorize_(A):
     # Step 3
     print("Step 3")
     for i in range(1, n):
-        
-
         # Step 4
         print("Step 4")
         U[i][i] = (A[i][i] - partialDotProduct(getRow(L, i), getCol(U, i), i-1))/L[i][i]
@@ -59,18 +59,22 @@ def LUfactorize_(A):
     # Step 7
     return([L, U])
 
-#A = [[1,2,3],[1,2,4],[10,20,1]]
-A = [[1,1,0,3],
-     [2,1,-1,1],
-     [3,-1,-1,2],
-     [-1,2,3,-1]]
-L, U = LUfactorize_(A)
-print "Finished factorization"
-print "A: "
-show(A)
-print "L: "
-show(L)
-print "U: "
-show(U)
-print "L * U: "
-show(matMult(L, U))
+
+def test_LUfactorize():
+        
+    A = [[1,1,0,3],
+         [2,1,-1,1],
+         [3,-1,-1,2],
+         [-1,2,3,-1]]
+    L, U = LUfactorize_(A)
+    print "Finished factorization"
+    print "A: "
+    show(A)
+    print "L: "
+    show(L)
+    print "U: "
+    show(U)
+    print "L * U: "
+    show(matMult(L, U))
+
+test_LUfactorize()
