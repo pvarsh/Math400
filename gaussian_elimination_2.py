@@ -114,6 +114,13 @@ def matMult(mat1,mat2):
             prod[row][col] = dot(mat1[row],getCol(mat2,col))
     return(prod)
 
+def randIntMat(n, cust_seed = 1234, min = 0, max = 10):
+    from random import randint
+    from random import seed
+    seed(cust_seed)
+    return [[randint(min, max) for j in range(n)] for i in range(n)]
+    
+
 def vectorQ(V):
     "mild test to see if V is a vector"
     if type(V) != type([1]):
