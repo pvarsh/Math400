@@ -14,7 +14,7 @@ def norm(vec):
 
 def GS(A, b, x0, tolerance, max_iter):
     """
-    not finished
+    Author: Peter Varshavsky
     """
     
     n = rows(A)
@@ -29,15 +29,15 @@ def GS(A, b, x0, tolerance, max_iter):
 
         # Step 3
         for i in range(n):
-            print "i: ", range(i)
-            print "i+1 ... n: ", range(i+1, n)
+            #print "i: ", range(i)
+            #print "i+1 ... n: ", range(i+1, n)
             x[i] = 1.0/A[i][i] * ( -sum( [A[i][j] * x[j] for j in range(i)])
                                    -sum( [A[i][j] * x0[j] for j in range(i+1, n)])
                                    +b[i] )
-        print("\nx%s :" %k)
-        print x
-        print("\nError: ")
-        print error
+        #print("\nx%s :" %k)
+        #print x
+        #print("\nError: ")
+        #print error
             
         # Step 4
         error[k] = norm(subVectors(x, x0))
@@ -65,7 +65,7 @@ def test1():
     maxIter = 5
     x = GS(A, b, x0, tol, maxIter)
     return x
-test1()
+#test1()
 
 #print ge_1(augment(A, b))[1]
 

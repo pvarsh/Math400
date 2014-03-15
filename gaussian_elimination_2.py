@@ -451,6 +451,8 @@ def residueTest(mat, b, sol):
     print "Solution: ", sol
     print "Error: %s" %error
 
+    return error
+
 
 ### Some Testing code begins here.
 
