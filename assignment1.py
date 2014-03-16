@@ -22,8 +22,10 @@ printNames()
 
 
 
+import matplotlib.pyplot as plt
+from numpy import arange
+from math import *
 
-from math import sqrt
 #from decimal import *
 
 
@@ -200,6 +202,12 @@ def augment(mat,vec):
         amat.append(mat[row]+[vec[row]])
     return(amat)
 
+def augmentMat(mat1, mat2):
+    amat = []
+    for i in range(rows(mat1)):
+        amat.append(mat1[i] + mat2[i])
+    return amat
+        
 
 ### The next two functions support checking a solution.
 
@@ -218,6 +226,9 @@ def getAandb(aug):
     Aandb = [A,b]
     
     return(Aandb)
+
+def L2norm(vec):
+    return sqrt(dot(vec, vec))
 
 def checkSol_1(aug,x):
     "For aug=[A|b], returns Ax, b, and b-Ax as vectors"
@@ -331,6 +342,27 @@ def backSub(M):
     return(sol)
 
 
+def forwardSub(M):
+    """
+    given a row reduced augmented lower-triangular matrix with nonzero
+    diagonal entries, returns a solution vector
+    """
+    cs = cols(M) - 1
+    sol = [0 for i in range(cs)]
+    for row in range(0, cs):
+        sol[row] =   (float(M[row][cs]) - sum( [M[row][j] * sol[j] for j in range(row)] )) / M[row][row]
+
+    return(sol)
+
+def solveLU(A, b):
+    L, U = LUFact(A)
+    y = forwardSub(augment(L, b))
+    x = backSub(augment(U, y))
+
+    return x
+
+
+
 def diag_test(mat):
     """
     Returns True if no diagonal element is zero, False
@@ -361,7 +393,82 @@ def ge_1(aug, pivotStrat = "naive"):
     results = [aug_n, sol]
     return(results)
 
-def residueTest(mat, b, sol, verbose = "yes"):
+def gauss_seidel(A, b, x0, tolerance, max_iter):
+    """
+    Author: Peter Varshavsky
+    """
+    
+    n = rows(A)
+    
+    # Step 1
+    k = 0
+    error = [-1 for _ in range(max_iter + 1)]    
+
+    # Step 2
+    while k <= max_iter:
+        x = [0 for _ in range(n)]
+
+        # Step 3
+        for i in range(n):
+            #print "i: ", range(i)
+            #print "i+1 ... n: ", range(i+1, n)
+            x[i] = 1.0/A[i][i] * ( -sum( [A[i][j] * x[j] for j in range(i)])
+                                   -sum( [A[i][j] * x0[j] for j in range(i+1, n)])
+                                   +b[i] )
+        #print("\nx%s :" %k)
+        #print x
+        #print("\nError: ")
+        #print error
+            
+        # Step 4
+        error[k] = L2norm(subVectors(x, x0))
+        if error[k] < tolerance:
+            print("The procedure was successful")
+            return [x, error]
+
+        # Step 5
+        k = k + 1
+
+        # Step 6
+        x0 = x
+
+    print("Maximum number of iterations exceeded")
+    return [x, error]
+
+def LUFact(M):
+    "Author: Lauren"
+    "return row reduced version of L"
+    N = copyMatrix(M)
+    L = zero(len(M),len(M[0]))
+    cs = cols(M)-2   # no need to consider last two cols
+    rs = rows(M)
+
+    #create identity matrix out of L
+    for i in range(len(L)):
+        for j in range(len(L)):
+            if i == j:
+                L[i][j] = 1
+
+    for col in range(cs+1):
+        scale = -1.0 / N[col][col]
+        for row in range(col+1,rs):
+            L[row][col] = (-1)*scale*N[row][col]
+            N=addrows(N, col, row, scale * N[row][col])
+    for col in range(cs+1):
+        for row in range(col+1,rs):
+            if N[row][col]<10**-14:
+                N[row][col]=0         
+
+    """
+    print"L ="
+    show(L)
+    print "U ="
+    show(N)
+    print""
+    """
+    return(L,N)
+
+def residueTest(mat, b, sol, verbose = True):
     "Error testing by Peter Varshavsky"
     "Returns a list with two components:"
     "a list of residues"
@@ -370,11 +477,32 @@ def residueTest(mat, b, sol, verbose = "yes"):
     
     residues = subVectors(b, prod)
     error = sqrt(dot(residues, residues))
-    print "Residues: ", residues
-    print "Solution: ", sol
-    print "Error: %s" %error
+
+    if verbose:
+        print "Residues: ", residues
+        print "Solution: ", sol
+        print "Error: %s" %error
 
     return error
+
+
+def makeHilbert(n):
+    " Returns an nxn Hilbert matrix "
+    " Author: PV "
+    return [[1.0/(col+1) for col in range(row, n+row)] for row in range(0, n)]
+
+def makeCvector(n):
+    " Returns a vector of $\int_0^1 x^k \sin(\pi x)$ for k from 0 to n "
+    " Author: PV "
+    from math import pi
+    
+    b = [2/pi]
+    b.append(1/pi)
+
+    for i in range(2, n):
+        b.append(1/pi - i*(i-1)*b[-2]/(pi**2))
+    return b
+
 
 
 
@@ -414,14 +542,92 @@ def exercise2():
 
     
     
-exercise2()
+#exercise2()
 
 def exercise3():
     print "\n****************************\nEXERCISE 3\n****************************"
 
-exercise3()
+    solGE = []
+    solGESPP = []
+    solLU = []
+    solGS = []
+
+
+    maxN = 25
+    for n in range(1, maxN + 1):
+        H = makeHilbert(n)
+        b = makeCvector(n)
+
+        #Gaussian Elimination
+        _, sol = ge_1(augment(H, b), pivotStrat = 'naive')
+        error = residueTest(H, b, sol, verbose = False)
+        solGE.append([sol, error])
+        #print "\nGE solution:"
+        #print sol
+
+        #Gaussian Elimination with Scaled Partial Pivoting
+        _, sol = ge_1(augment(H, b), pivotStrat = "scaled partial")
+        error = residueTest(H, b, sol, verbose = False)
+        solGESPP.append([sol, error])
+        #print "\nGESPP solution:"
+        #print sol
+
+        #Gauss-Seidel
+        x0 = [0 for _ in range(n)]
+        tolerance = 0.1
+        max_iter = 10000
+        sol = gauss_seidel(H, b, x0, tolerance, max_iter)[0]
+        error = residueTest(H, b, sol, verbose = False)
+        solGS.append([sol, error])
+        #print "\nGS solution:"
+        #print sol
+
+        #LU factorization
+        sol = solveLU(H, b)
+        error = residueTest(H, b, sol, verbose = False)
+        solLU.append([sol, error])
+        #print "\nLU solution:"
+        #print sol
+
+   
+    plt.plot( arange(1, maxN + 1, 1), getCol(solGE, 1), color = 'black', label = 'Naive GE')
+    plt.plot( arange(1, maxN + 1, 1), getCol(solGS, 1), color = 'orange', label = 'Gauss-Seidel')
+    plt.plot( arange(1, maxN + 1, 1), getCol(solGESPP, 1), color = 'red', label = 'SPP GE')
+    plt.plot( arange(1, maxN + 1, 1), getCol(solLU, 1), color = 'cyan', label = 'LU')
+    plt.legend(loc='upper left')
+    plt.axis([0, maxN , 0, 0.0000004], 'equal')
+
+    plt.show()
+
+    #for i in [1,5,10,15,20,25]:
+        
+    """
+    print "\nNaive Gaussian Elimination errors:"
+    print getCol(solGE, 1)
+    print "\nGaussian Elimination with Scaled Partial Pivoting errors:"
+    print getCol(solGESPP, 1)
+    print "\nGauss-Seidel errors:"
+    print getCol(solGS, 1)
+    """
+
+
+
+#exercise3()
 
 def exercise4():
     print "\n****************************\nEXERCISE 4\n****************************"
 
+    n = 4
+    H = makeHilbert(n)
+    I = identity(n)
+
+    HI = augmentMat(H, I)
+    show(HI)
+
+    rowReduce(HI)
+    #show(I)
+    
+    #show(H)
+    
+    
 exercise4()
