@@ -291,9 +291,12 @@ def scaleFactors(mat):
 def rowReduce(M, pivotStrat = "naive"):
     "return row reduced version of M"
     "PV: added pivot strategy parameter"
+    "M is an augmented matrix"
+
     N = copyMatrix(M)
     cs = cols(M)-2   # no need to consider last two cols
     rs = rows(M)
+
     s = scaleFactors(M)
     #print("Scale factors: %s" %s)
     
@@ -322,6 +325,52 @@ def rowReduce(M, pivotStrat = "naive"):
                 
             #scale = Decimal(-1.0) / N[col][col] # decimal
             scale = -1.0 / N[col][col] # decimal
+            for row in range(col+1, rs):
+                N = addrows(N, col, row, scale * N[row][col])
+                
+    return(N)
+
+def geInverse(M, pivotStrat = "naive"):
+    "return row reduced version of M"
+    "PV: added pivot strategy parameter"
+    "M is an augmented matrix"
+
+    N = copyMatrix(M)
+    cs = cols(M)   # no need to consider last two cols
+    rs = rows(M)
+
+    s = scaleFactors(M)
+    #print("Scale factors: %s" %s)
+    
+    for col in range(rs):
+        #print("Col: %s" %col)
+        # find pivot
+        if pivotStrat == "naive":
+            #print "\nExecuting naive"
+            j = findPivotrow1(N,col) # Naive Gaussian Elimination
+        elif pivotStrat == "partial":
+            #print "\nExecuting partial"
+            j = findPivotPP(N, col) # Partial Pivoting
+        elif pivotStrat == "scaled partial":
+            #print "\nExecuting scaled partial"
+            j = findPivotSPP(N, col, s)
+        else:
+            print("\nrowReduce: pivotStrat parameter value not accepted")
+
+        # swap rows
+        if j < 0:
+            print("\nrowReduce: No pivot found for column index %d "%(col))
+            return(N)
+        else:
+            if j != col:
+                N = swaprows(N,col,j, s)
+                
+            #scale = Decimal(-1.0) / N[col][col] # decimal
+                
+            N[col] = scalarMult( 1.0/N[col][col], N[col])
+            scale = -1.0 / N[col][col] # decimal
+            for row in range(0, col):
+                N = addrows(N, col, row, scale * N[row][col])
             for row in range(col+1, rs):
                 N = addrows(N, col, row, scale * N[row][col])
                 
@@ -503,6 +552,35 @@ def makeCvector(n):
         b.append(1/pi - i*(i-1)*b[-2]/(pi**2))
     return b
 
+def chooseNK(n,k):
+    return factorial(n)/(factorial(n-k) * factorial(k))
+    
+
+def makeHilbertInverse(n):
+    n
+    Hinv = [[0 for s in range(n)] for p in range(n)]
+    for row in range(n):
+        k = row + 1
+        for col in range(n):
+            l = col + 1
+            Hinv[row][col] = (-1) ** (k+l) * (k + l - 1) * chooseNK(n + k -1, n-l) * chooseNK(n + l - 1, n-k) * (chooseNK(k+l-2, k-1)**2)
+
+    return Hinv
+
+def splitABgetB(mat):
+    cs = cols(mat)
+    rs = rows(mat)
+    
+    if cs != 2* rs:
+        print "splitAB: can't split two matrices, # of columns is not twice # of rows"
+        return None
+    else:
+        newMat = vec2colVec(getCol(mat, rs))
+        for i in range(rs+1, cs):
+            newMat = augment(newMat, getCol(mat, i))
+
+    return newMat
+
 
 
 
@@ -542,7 +620,7 @@ def exercise2():
 
     
     
-#exercise2()
+exercise2()
 
 def exercise3():
     print "\n****************************\nEXERCISE 3\n****************************"
@@ -574,8 +652,8 @@ def exercise3():
 
         #Gauss-Seidel
         x0 = [0 for _ in range(n)]
-        tolerance = 0.1
-        max_iter = 10000
+        tolerance = 0.001
+        max_iter = 1000
         sol = gauss_seidel(H, b, x0, tolerance, max_iter)[0]
         error = residueTest(H, b, sol, verbose = False)
         solGS.append([sol, error])
@@ -595,37 +673,61 @@ def exercise3():
     plt.plot( arange(1, maxN + 1, 1), getCol(solGESPP, 1), color = 'red', label = 'SPP GE')
     plt.plot( arange(1, maxN + 1, 1), getCol(solLU, 1), color = 'cyan', label = 'LU')
     plt.legend(loc='upper left')
-    plt.axis([0, maxN , 0, 0.0000004], 'equal')
+    plt.axis([0, maxN , 0, 0.0004], 'equal')
 
     plt.show()
 
     #for i in [1,5,10,15,20,25]:
         
-    """
+    
     print "\nNaive Gaussian Elimination errors:"
     print getCol(solGE, 1)
     print "\nGaussian Elimination with Scaled Partial Pivoting errors:"
     print getCol(solGESPP, 1)
     print "\nGauss-Seidel errors:"
     print getCol(solGS, 1)
-    """
+    print "\nLU factorization errors:"
+    print getCol(solLU, 1)
+
+    GEsubset = getCol(solGE, 1)
+    GESPPsubset = getCol(solGESPP, 1)
+    GSsubset = getCol(solGS, 1)
+    LUsubset = getCol(solLU, 1)
+
+    "printing select error values"
+    print "GE select error values"
+    for i in [1, 2, 5, 10, 15, 20, 25]:
+        print GEsubset[i-1]
+    print "GE with Scaled Partial Pivoting select error values"
+    for i in [1, 2, 5, 10, 15, 20, 25]:
+        print GESPPsubset[i-1]
+    print "Gauss-Seidel select error values"
+    for i in [1, 2, 5, 10, 15, 20, 25]:
+        print GSsubset[i-1]
+    print "LU select error values"
+    for i in [1, 2, 5, 10, 15, 20, 25]:
+        print LUsubset[i-1]
+    
+       
 
 
-
-#exercise3()
+exercise3()
 
 def exercise4():
     print "\n****************************\nEXERCISE 4\n****************************"
 
-    n = 4
+    n = 3
     H = makeHilbert(n)
     I = identity(n)
 
     HI = augmentMat(H, I)
-    show(HI)
+    #show(HI)
 
-    rowReduce(HI)
-    #show(I)
+    IH = geInverse(HI, "scaled partial")
+    #show(IH)
+
+    Hnew = splitABgetB(IH)
+    show(Hnew)
     
     #show(H)
     
