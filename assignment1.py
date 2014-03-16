@@ -1,36 +1,30 @@
 """
-gauss_elim_1.py
+assignment_1_group_8.py
 
-Includes code for functions that do basic vector and
-matrix arithmetic.  Most of these functions support
-the function ge_1(aug) which takes an n by n+1
-augmented matrix and returns a row-reduced matrix and
-an approximate solution vector of the corresponding linear
-system.  It uses gaussian elimination with a naive pivot
-strategy.  That is, at each stage in the row reduction it
-chooses, as the pivot, the first nonzero entry that lies
-on or below the diagonal in the current column.
-
-revision 0.01 02/06/12  added code [ds]
-revision 0.02 02/06/12  gardened out some code [bic]
-revision 1.23 02/08/12  added aug_2 example, cleaned code [ds]
-revision 1.24 02/09/12  cleaned code some more [ds]
-revision 2.00 03/12/12  changed filename, commented out tests [ds]
-
-matrix examples: [[28, 12, 20, 28], [4, 32, 28, 16]] , 2 by 4
-                 [[28, 12, 20, 28]] , 1 by 4
-                 [[[28], [12], [20], [28]] , 4 by 1
-
-
-vector example [28, 12, 20, 28] 
+3/15/14  bic M400
 
 """
 
-# one way:
+#######  START Administrivia 
+m400group = 8   # change this to your group number
+
+m400names = ['Deborah Castro', 'Yueming Liu', 'Mirai Furukawa', 'Peter Varshavsky'] # change this for your names
+
+def printNames():
+    print("assignment_1_group_8.py for group %s:"%(m400group)),
+    for name in m400names:
+        print("%s, "%(name)),
+    print
+
+printNames()
+
+#######  END Administrivia
+
+
 
 
 from math import sqrt
-from decimal import *
+#from decimal import *
 
 
 def show(mat):
@@ -260,7 +254,10 @@ def findPivotPP(mat, col):
 def findPivotSPP(mat, col, s):
     "Scaled partial pivot by Peter Varshavsky"
     
-    values = [Decimal(abs(mat[row][col]))/s[row] for row in range(col, rows(mat))]
+    #values = [Decimal(abs(mat[row][col]))/s[row] for row in range(col, rows(mat))]
+    values = [float(abs(mat[row][col]))/s[row] for row in range(col, rows(mat))]
+
+
     
     if max(values) > 0:
         return col + max(range(len(values)), key = lambda i: values[i])
@@ -311,7 +308,9 @@ def rowReduce(M, pivotStrat = "naive"):
         else:
             if j != col:
                 N = swaprows(N,col,j, s)
-            scale = Decimal(-1.0) / N[col][col] # decimal
+                
+            #scale = Decimal(-1.0) / N[col][col] # decimal
+            scale = -1.0 / N[col][col] # decimal
             for row in range(col+1, rs):
                 N = addrows(N, col, row, scale * N[row][col])
                 
@@ -362,7 +361,7 @@ def ge_1(aug, pivotStrat = "naive"):
     results = [aug_n, sol]
     return(results)
 
-def residueTest(mat, b, sol):
+def residueTest(mat, b, sol, verbose = "yes"):
     "Error testing by Peter Varshavsky"
     "Returns a list with two components:"
     "a list of residues"
@@ -371,279 +370,58 @@ def residueTest(mat, b, sol):
     
     residues = subVectors(b, prod)
     error = sqrt(dot(residues, residues))
+    print "Residues: ", residues
     print "Solution: ", sol
     print "Error: %s" %error
 
     return error
 
-def LUfactorize(M):
-    "Author: Peter Varshavsky"
-    "Returns a list [L, U]"
-    "Has no checks for whether factorization is possible"
-
-    cs = cols(M)-2
-    rs = rows(M)
-
-    L = identity(rs)
-    U = copyMatrix(M)
-
-    for col in range(cols(M)):
-        atomic = identity(rs)
-        atomic1 = identity(rs)
-        
-        for row in range(col+1, rs):
-            "it seems redundant to use two atomic matrices"
-            "one for knocking out columns in U"
-            "and one to keep in L"
-            atomic[row][col] = -U[row][col] / U[col][col]
-            atomic1[row][col] = U[row][col] / U[col][col]
-            
-        U = matMult(atomic, U)
-        L = matMult(L, atomic1)
-    
-    return([L, U])
-
-    
-def example2():
-    print "************ EXAMPLE 2 FROM PAGE 404"
-    A = [[1, 1, 0, 3],
-         [2, 1,-1, 1],
-         [3,-1,-1, 2],
-         [-1,2, 3,-1]]
-    L1 = [[1,0,0,0],
-          [2,1,0,0],
-          [3,4,1,0],
-          [-1,-3,0,1]]
-
-    
-    U1 = [[1,1,0,3],
-          [0,-1,-1,-5],
-          [0,0,3,13],
-          [0,0,0,-13]]
-    
-    #show(matMult(L1, U1))
-    show(A)
-    LU = LUfactorize(A)
-    show(LU[0])
-    show(LU[1])
-    show(matMult(LU[0], LU[1]))
-    print "*********** \EXAMPLE 2 FROM PAGE 404"
-
-#example2()
-
-"""
-A = [[1, 1, 0, 3],
-     [2, 1,-1, 1],
-     [3,-1,-1, 2],
-     [-1,2, 3,-1]]
-
-L1 = [[1, 0, 0, 0],
-      [-2, 1, 0, 0],
-      [-3, 0, 1, 0],
-      [1, 0, 0, 1]]
-
-L2 = [[1, 0, 0, 0],
-      [0, 1, 0, 0],
-      [0, 1, 1, 0],
-      [0, -2, 0, 1]]
-
-L3 = [[1,0,0,0],
-      [0,1,0,0],
-      [0,0,1,0],
-      [0,0,3,1]]
-show(matMult(L3, A))
-show(matMult(L1, L2))
-print "grr"
-show(matMult(matMult(L1, L2), L3))
-show(matMult(L2, A))
-show(matMult(L2, matMult(L1, A)))
-"""
-
-
-
-
-### Some Testing code begins here.
-
-A = [[4,-2,1],
-    [-2,4,-2],
-    [1,-2,4]]
-
-
-C=[2,3,5]
-
-
-aug = [[ 1.0, -1.0,  2.0, -1.0,  8.0],
-       [ 0.0,  0.0, -1.0, -1.0, -4.0],
-       [ 0.0,  2.0, -1.0,  1.0,  6.0],
-       [ 0.0,  0.0,  2.0,  4.0, 12.0]]
-
-
-aug_2 = [[ 1, -1,  2, -1,  8],
-         [ 0,  0, -1, -1, -4],
-         [ 0,  2, -1,  1,  6],
-         [ 0,  0,  2,  2, 12]]
-
-
-
-def showProcess(A,S):
-    pivotStr = "scaled partial"
-    print("\n***********************************************")
-    print pivotStr
-    print("***********************************************")
-    
-    "given matrix A and vector S, get B=AS and show solve for S"
-
-    print("\n***********************************************")
-    print("A")
-    show(A)
-    print("S=%s"%(S))
-    B = matMult(A,vec2colVec(S))
-    print("A*S=%s"%(B))
-    AS = augment(A,colVec2vec(B))
-    print("augment(A,A*S)=")
-    show(AS)
-    Ar=rowReduce(AS, pivotStr)
-    print("row reduced Ar=")
-    show(Ar)
-    sol = backSub(Ar)
-    print("solution is %s"% sol)
-    
-    print("\n***********************************************")
-    print("aug = ")
-    show(aug)
-    aug_n = rowReduce(aug)
-    print("aug_n = ")
-    show(aug_n)
-    print("the solution from ge_1(aug) is %s"%(ge_1(aug, pivotStr)[1]))
-    print("\naug = ")
-    show(aug)
-    L = getAandb(aug)
-    print("\nA = ")
-    show(L[0])
-    print("\nb = %s" %(L[1]))
-    y = ge_1(aug, pivotStr)[1]
-    print("\ny = ge_1(aug)[1] = %s"%(y))
-    x_vec =  vec2rowVec(y)
-    print("\nx_row_vec = %s"%(x_vec))
-    x = transpose(vec2rowVec(y))
-    print("\nx_col_vec = %s"%(x))
-    Ax = matMult(L[0],x)
-    print("\nAx = %s"%(Ax))
-    print("\nAx_vec = %s"%(colVec2vec(Ax)))
-    x_col_vec = vec2colVec(ge_1(aug, pivotStr)[1])
-    L = checkSol_1(aug,ge_1(aug, pivotStr)[1])
-    print("\n Ax = %s, \nb = %s, \nr = %s"%(L[0],L[1],L[2]))
-    
-    print("\n***********************************************")
-    print("\naug_2 = ")
-    show(aug_2)
-    outputlist = ge_1(aug_2, pivotStr)
-    print("\naug_2_n = ge_1(aug_2)[0] = \n")
-    show(outputlist[0])
-    print("\nge_1(aug_2)[1] is %s"%(outputlist[1]))
-
-#showProcess(A,C)
-
-### Peter testing things
-
-    
-def testDecimal():
-    A = [[1, 1, 0, 3],
-         [2, 1,-1, 1],
-         [3,-1,-1, 2],
-         [-1,2, 3,-1]]
-
-
-    b2 = [1,2,3,4]
-    Aaug = augment(A, b2)
-    Adec = mat2decimal(Aaug)
-
-    ans = ge_1(Adec)
-    print "\nAnswer: \n",ans[1]
-
-
-##    ans2 = ge_1(augA2, pivotStrat = "naive")
-##    residueTest(A2, b2, ans2[1])
-##    ans2a = ge_1(augA2, pivotStrat = "partial")
-##    residueTest(A2, b2, ans2a[1])
-##    ans2b = ge_1(augA2, pivotStrat = "scaled partial")
-##    residueTest(A2, b2, ans2b[1])
-##    print("Answer with naive", ans2[1])
-##    print("Answer with PP", ans2a[1])
-##    print("Answer with SPP", ans2b[1])
-##    ans2wa = [-0.003125, 2.002, 2.002, 1.0]
-##    residueTest(A2, b2, ans2wa)
-    
 
 
 def exercise2():
-    A2 = [[10, 10, 10, 10**17],
-          [1, 10**(-3), 10**(-3), 10**(-3)],
-          [1, 1, 10**(-3), 10**(-3)],
-          [1, 1, 1, 10**(-3)]]
+    print "\n****************************\nEXERCISE 2\n****************************"
 
-    b2 = [10**17, 1, 2, 3]
-    augA2 = augment(A2, b2)
-
-    ans2 = ge_1(augA2, pivotStrat = "naive")
-    residueTest(A2, b2, ans2[1])
-    ans2a = ge_1(augA2, pivotStrat = "partial")
-    residueTest(A2, b2, ans2a[1])
-    ans2b = ge_1(augA2, pivotStrat = "scaled partial")
-    residueTest(A2, b2, ans2b[1])
-    print("Answer with naive", ans2[1])
-    print("Answer with PP", ans2a[1])
-    print("Answer with SPP", ans2b[1])
-    ans2wa = [-0.003125, 2.002, 2.002, 1.0]
-    residueTest(A2, b2, ans2wa)
-
-#exercise2()
-
-def decVec2float(vec):
-    return [float(v) for v in vec]
-
-def exercise2dec():
-    A2 = [[10, 10, 10, 10**17],
-          [1, 10**(-3), 10**(-3), 10**(-3)],
-          [1, 1, 10**(-3), 10**(-3)],
-          [1, 1, 1, 10**(-3)]]
-
-    b2 = [10**17, 1, 2, 3]
-    augA2 = augment(A2, b2)
-    augA2dec = mat2decimal(augA2)
+    exponent = 17.45
     
-    ans2 = ge_1(augA2dec, pivotStrat = "scaled partial")
-    print(decVec2float(ans2[1]))
-    residueTest(A2, b2, decVec2float(ans2[1]))
-##    residueTest(A2, b2, decVec2float(ans2[1]))
-##    
-##    ans2a = ge_1(augA2dec, pivotStrat = "partial")
-##    residueTest(A2, b2, decVec2float(ans2a[1]))
-##    
-##    ans2b = ge_1(augA2dec, pivotStrat = "scaled partial")
-##    residueTest(A2, b2, decVec2float(ans2b[1]))
-##    
-##    print("Answer with naive", ans2[1])
-##    print("Answer with PP", ans2a[1])
-##    print("Answer with SPP", ans2b[1])
-##    #ans2wa = [-0.003125, 2.002, 2.002, 1.0]
-    #residueTest(A2, b2, ans2wa)
+    A = [[10, 10, 10, 10**exponent],
+         [1, 10**(-3), 10**(-3), 10**(-3)],
+         [1, 1, 10**(-3), 10**(-3)],
+         [1, 1, 1, 10**(-3)]]
 
-getcontext().prec = 20
-#exercise2dec()
+    b = [10**exponent, 1, 2, 3]
+    augA = augment(A, b)
 
-def exercise2sympy():
-    import sympy
-    import numpy as np
-    A2 = [[10, 10, 10, 10**17],
-          [1, 10**(-3), 10**(-3), 10**(-3)],
-          [1, 1, 10**(-3), 10**(-3)],
-          [1, 1, 1, 10**(-3)]]
-
-    b2 = [10**17, 1, 2, 3]
-    augA2 = augment(A2, b2)
+    print "This exercise compares the solutions of a system of equations Ax = b"
+    print "using Gaussian Elimination with three pivoting strategies\n"
     
-    A2sym = sympy.Matrix(augA2).rref()
-    ansA2sym = [1.99609375, 0, 2, 1]
-    residueTest(A2, b2, ansA2sym)
+    print "Matrix A: "    
+    show(A)
+    print "Vector b: "
+    print(b)
 
+    print "\nNaive Gaussian Elimination"
+    ans_naive = ge_1(augA, pivotStrat = "naive")
+    residueTest(A, b, ans_naive[1])
+
+    print "\nGaussian Elimination with Partial Pivoting"
+    ans_partial = ge_1(augA, pivotStrat = "partial")
+    residueTest(A, b, ans_partial[1])
+    
+
+    print "\nGaussian Elimination with Scaled Partial Pivoting"
+    ans_spp = ge_1(augA, pivotStrat = "scaled partial")
+    residueTest(A, b, ans_spp[1])
+
+    
+    
+exercise2()
+
+def exercise3():
+    print "\n****************************\nEXERCISE 3\n****************************"
+
+exercise3()
+
+def exercise4():
+    print "\n****************************\nEXERCISE 4\n****************************"
+
+exercise4()

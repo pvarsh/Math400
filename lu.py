@@ -19,7 +19,7 @@ def pivot_matrix(M):
     m = len(M)
 
     # Create an identity matrix, with floating point values                                                                                                                                                                                            
-    id_mat = [[float(i ==j) for i in xrange(m)] for j in xrange(m)]
+    id_mat = [[float(i == j) for i in xrange(m)] for j in xrange(m)]
 
     # Rearrange the identity matrix such that the largest element of                                                                                                                                                                                   
     # each column of M is placed on the diagonal of of M                                                                                                                                                                                               

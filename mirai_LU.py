@@ -33,4 +33,4 @@ show(lu[1])
 # Making a change to show AP
 
 print "testing randIntMat"
-show(randIntMat(n = 5, cust_seed = 123, min = 0, max = 4))
+show(randIntMat(n = 5, cust_seed = 124443, min = 0, max = 4))
