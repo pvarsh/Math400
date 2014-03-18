@@ -11,7 +11,7 @@ def makeHilbert(n):
     " Author: PV "
     return [[1.0/(col+1) for col in range(row, n+row)] for row in range(0, n)]
 
-def integralRecursion(n):
+def makeCvector(n):
     " Returns a vector of $\int_0^1 x^k \sin(\pi x)$ for k from 0 to n "
     " Author: PV "
     from math import pi
