@@ -113,6 +113,9 @@ def linearSplineInterpolate(X, Y, x):
         print "x value outside data"
         return -1
 
+    if j == len(X) - 1:
+        return Y[-1]
+    
     return Y[j] - Y[j] * (x - X[j]) / (X[j+1] - X[j]) + Y[j+1] * (x - X[j]) / (X[j+1] - X[j])
 
 
@@ -151,21 +154,21 @@ A, B, C, D = makeCubicSpline(X, Y)
 #print Y
 #print Yprime
 
-how_fine_Orig = 100
-how_fine_Lagr = 100
-X_fine_Orig = [X[0] + (float(X[-1]) - X[0])/how_fine_Orig * i for i in range(how_fine_Orig + 1)]
-X_fine_Lagr = [X[0] + (float(X[-1]) - X[0])/how_fine_Lagr * i for i in range(how_fine_Lagr + 1)] 
-Y_fine_Lagr = [lagrange(X, Y, x) for x in X_fine_Lagr]
-Y_fine_Orig = [f_prob3(x) for x in X_fine_Orig]
-Y_fine_CS = [cubicSplineInterpolate(X, x, A, B, C, D) for x in X_fine_Orig]
+M = 200
+X_inter = [X[0] + (float(X[-1]) - X[0])/M * i for i in range(M + 1)] 
+Y_inter_L = [lagrange(X, Y, x) for x in X_inter]
+Y_inter_CS = [cubicSplineInterpolate(X, x, A, B, C, D) for x in X_inter]
+Y_inter_LS = [linearSplineInterpolate(X, Y, x) for x in X_inter]
+Y_f = [f_prob3(x) for x in X_inter]
 
 f2 = interp1d(X, Y, kind='cubic')
 
 plt.plot(X, Y, "rs")
-plt.plot(X_fine_Orig, f2(X_fine_Orig), color = "red", label = "Scipy cubic")
-plt.plot(X_fine_Lagr, Y_fine_Lagr, color = "orange", label = "Lagrange")
-plt.plot(X_fine_Orig, Y_fine_Orig, color = "cyan", label = r"$1.6e^{-2x}\sin(3\pi x)$")
-plt.plot(X_fine_Orig, Y_fine_CS, color = "magenta", label = "Cubic Spline")
+plt.plot(X_inter, f2(X_inter), color = "red", label = "Scipy cubic")
+plt.plot(X_inter, Y_inter_L, color = "orange", label = "Lagrange")
+plt.plot(X_inter, Y_f, color = "cyan", label = r"$1.6e^{-2x}\sin(3\pi x)$")
+plt.plot(X_inter, Y_inter_CS, color = "magenta", label = "Cubic Spline")
+plt.plot(X_inter, Y_inter_LS, color = "blue", label = "Linear spline")
 plt.legend(loc = "lower right")
 plt.show()
 
