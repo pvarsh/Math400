@@ -132,6 +132,7 @@ def linearSplineInterpolate(X, Y, x):
 def l_i_prime(X, i):
     index = range(len(X))
     index.remove(i)
+    print "index: ", index
 
     return l_i_prime_recursion(X, i, 0, index)
     
@@ -139,22 +140,24 @@ def l_i_prime(X, i):
 def l_i_prime_recursion(X, i, j, index):
 
     if j == len(index)-1:
-        #print "reached recursion end"
-        return 1
+        print "reached recursion end"
+        return (X[i] - X[-1]) + (X[i] - X[j])
     else:
-        #print "recursion:: j = ", j
-        #print "index: ", index[j+1: ]
-        #print "product: ", listProd( [ X[i]-X[k] for k in index[j+1: ] ]), "\n"
+        print "recursion:: j = ", j
+        print "index: ", index[j+1: ]
+        print "product: ", listProd( [ X[i]-X[k] for k in index[j+1: ] ]), "\n"
         return listProd( [ X[i]-X[k] for k in index[j+1: ] ]) + (X[i]-X[j]) * l_i_prime_recursion(X, i, j+1, index)
                     
     
-def hermite_1_j(X, x):
-    pass
+def hermite_1_j(X, x, j):
+    return (1 - 2*(x - X[j]) * l_i_prime(X, j) ) * lagrange_i(X, x, j)**2
 
     
-def hermite_2_j(X, x):
-    pass
-    
+def hermite_2_j(X, x, j):
+    return (x - X[j]) * lagrange_i(X, x, j)**2
+
+def hermite(X, Y, Yprime, x):
+    return sum( [Y[j]*hermite_1_j(X, x, j) + Yprime[j]*hermite_2_j(X, x, j) for j in range(len(X))])
 
 ##def lagrange_fun_maker(X, Y, x):
 ##    N = len(X)
@@ -176,48 +179,85 @@ End function definitions
 Function calls
 """
 
-X = [0, 1.0/6, 1.0/3, 1.0/2, 7.0/12, 2.0/3, 3.0/4, 5.0/6, 11.0/12, 1]
-Y = [1.6 * exp(-2 * x) * sin(3*pi*x) for x in X]
-Yprime = [-3.2 * exp(-2*x) * sin(3*pi*x) + 4.8 * exp(-2*x) * cos(3*pi*x) for x in X] # derivative for Hermitian
 
-A, B, C, D = makeCubicSpline(X, Y)
+def exercise3():
+    X = [0, 1.0/6, 1.0/3, 1.0/2, 7.0/12, 2.0/3, 3.0/4, 5.0/6, 11.0/12, 1]
+    Y = [1.6 * exp(-2 * x) * sin(3*pi*x) for x in X]
+    Yprime = [-3.2 * exp(-2*x) * sin(3*pi*x) + 4.8 * exp(-2*x) * cos(3*pi*x) for x in X] # derivative for Hermitian
 
-# you can change this value to get a finer or coarser plot
-M = 200 # this is the number of points used to construct interpolation graphs
+    A, B, C, D = makeCubicSpline(X, Y)
 
-# x values for interpolation
-X_inter = [X[0] + (float(X[-1]) - X[0])/M * i for i in range(M + 1)]
+    # you can change this value to get a finer or coarser plot
+    M = 200 # this is the number of points used to construct interpolation graphs
 
-# y values with Lagrange
-Y_inter_L = [lagrange(X, Y, x) for x in X_inter]
+    # x values for interpolation
+    X_inter = [X[0] + (float(X[-1]) - X[0])/M * i for i in range(M + 1)]
 
-# y values with cubic splines
-Y_inter_CS = [cubicSplineInterpolate(X, x, A, B, C, D) for x in X_inter]
+    Y_inter_H = [hermite(X, Y, Yprime, x) for x in X_inter]
 
-# y values with linear splines
-Y_inter_LS = [linearSplineInterpolate(X, Y, x) for x in X_inter]
+    # y values with Lagrange
+    Y_inter_L = [lagrange(X, Y, x) for x in X_inter]
 
-# y values of the original function
-Y_f = [f_prob3(x) for x in X_inter]
+    # y values with cubic splines
+    Y_inter_CS = [cubicSplineInterpolate(X, x, A, B, C, D) for x in X_inter]
 
-# y values using scipy cubic interpolation
-f2 = interp1d(X, Y, kind='cubic')
+    # y values with linear splines
+    Y_inter_LS = [linearSplineInterpolate(X, Y, x) for x in X_inter]
 
-"""
-plt.plot(X, Y, "rs")
-plt.plot(X_inter, f2(X_inter), color = "red", label = "Scipy cubic")
-plt.plot(X_inter, Y_inter_L, color = "orange", label = "Lagrange")
-plt.plot(X_inter, Y_f, color = "cyan", label = r"$1.6e^{-2x}\sin(3\pi x)$")
-plt.plot(X_inter, Y_inter_CS, color = "magenta", label = "Cubic Spline")
-plt.plot(X_inter, Y_inter_LS, color = "blue", label = "Linear spline")
-plt.legend(loc = "lower right")
-plt.show()
-"""
+    # y values of the original function
+    Y_f = [f_prob3(x) for x in X_inter]
 
-print l_i_prime(X, 2)
-
-Z = [0,1,2,4]
-i = 2
-print l_i_prime(Z, i)
+    # y values using scipy cubic interpolation
+    f2 = interp1d(X, Y, kind='cubic')
 
 
+    plt.plot(X, Y, "rs")
+    #plt.plot(X_inter, f2(X_inter), color = "red", label = "Scipy cubic")
+    #plt.plot(X_inter, Y_inter_L, color = "orange", label = "Lagrange")
+    plt.plot(X_inter, Y_f, color = "cyan", label = r"$1.6e^{-2x}\sin(3\pi x)$")
+    #plt.plot(X_inter, Y_inter_CS, color = "magenta", label = "Cubic Spline")
+    #plt.plot(X_inter, Y_inter_LS, color = "blue", label = "Linear spline")
+    plt.plot(X_inter, Y_inter_H, color = "yellow", label = "Hermite")
+    plt.legend(loc = "lower right")
+    plt.show()
+
+# exercise3()
+
+
+def example_1():
+    X = [1.3, 1.6, 1.9]
+    Y = [0.6200860, 0.4554022, 0.2818186]
+    Yprime = [-0.5220232, -0.5698959, -0.5811571]
+    x = 1.5
+    l_i = [50.0/9 * x**2 - 175.0/9 * x + 152.0/9,
+           -100.0/9 * x**2 + 320.0/9 * x - 247.0/9,
+           50.0/9 * x**2 - 145.0/9 * x + 104.0/9]
+    l_i_prime_list = [100.0/9 * x - 175.0/9,
+                 -200.0/9 * x + 320.0/9,
+                 100.0/9 * x - 145.0/9]
+    for i in range(len(X)):
+        print "\nlagrange_i:    ", lagrange_i(X, x, i)
+        print "L_i algebraic: ", l_i[i]
+        print "l_i_prime:           ", l_i_prime(X, i)
+        print "l_i_prime algebraic: ", l_i_prime_list[i]
+
+#example_1()
+
+def testing_recursion_quadratic():
+    X = [1.2,1.6]
+    derivatives = [2 * x  + (-X[0] - X[1]) for x in X] 
+    print "derivatives: ", derivatives
+    for i in range(len(X)):
+        print l_i_prime(X, i)
+
+testing_recursion_quadratic()
+
+def testing_recursion_cubic():
+    X = [1.2, 1.5, 1.7]
+    derivatives = [3 * x**2 + 2 * (-X[0]-X[1]-X[2])*x + (X[0]*X[1] + X[0]*X[2] + X[1]*X[2]) for x in X]
+    print "derivatives: ", derivatives
+    for i in range(len(X)):
+        der = l_i_prime(X, i)
+        print "%s'th derivative: " %i, der
+
+testing_recursion_cubic()
