@@ -49,7 +49,7 @@ def stupidSearch(X, x):
 
 
 def makeCubicSpline(X, Y):
-    N = len(X) - 1
+    N = len(X)
 
     # Copy Y
     A = [y for y in Y]
@@ -58,10 +58,10 @@ def makeCubicSpline(X, Y):
     print "len(X): ", len(X)
     
     # Step 1
-    H = [X[i+1] - X[i] for i in range(N)]
+    H = [ X[i+1] - X[i] for i in range(N-1) ]
     print "len(H): ", len(H)
     # Step 2
-    Alpha = [3.0/H[i] * (A[i+1] - A[i]) - 3.0/H[i-1] * (A[i] - A[i-1]) for i in range(1, N)]
+    Alpha = [3.0/H[i] * (A[i+1] - A[i]) - 3.0/H[i-1] * (A[i] - A[i-1]) for i in range(1, N-1)]
     print "len(Alpha): ", len(Alpha)
     
     # Step 3
@@ -70,23 +70,24 @@ def makeCubicSpline(X, Y):
     Z = [0]
 
     # Step 4
-    for i in range(1, N):
-        L.append(2 * (X[i+1] - X[i]) - H[i-1]*Mu[i-1])
+    for i in range(1, N-1):
+        L.append(2 * (X[i+1] - X[i-1]) - H[i-1]*Mu[i-1])
         Mu.append(H[i] / L[i])
-        Z.append( (Alpha[i-1] - H[i-1] * Z[i-1] ) / L[i] )
+        Z.append( (Alpha[i-1] - H[i-1] * Z[i-1] ) / L[i] ) # Alpha is i-1 since in the book
+                                                           # it is defined with 1-based index
 
     # Step 5
     L.append(1)
-    Mu.append(0)
+    Z.append(0)
     C = [0 for _ in range(N+1)]
     B = [0 for _ in range(N+1)]
     D = [0 for _ in range(N+1)]
 
     # Step 6
-    for j in reversed(range(N)):
+    for j in reversed(range(N-1)):
         print "j: ", j
         C[j] = Z[j] - Mu[j] * C[j+1]
-        B[j] = (A[j+1] - A[j]) / H[j] - H[j] * (C[j+1] + 2* C[j]) / 3
+        B[j] = (A[j+1] - A[j]) / H[j] - H[j] * (C[j+1] + 2 * C[j]) / 3
         D[j] = (C[j+1] - C[j]) / (3*H[j])
 
     print A
@@ -105,6 +106,14 @@ def cubicSplineInterpolate(X, x, A, B, C, D):
 
     return A[j] + B[j]*(x - X[j]) + C[j] * (x - X[j])**2 + D[j] * (x - X[j])**3
         
+def linearSplineInterpolate(X, Y, x):
+    j = stupidSearch(X, x)
+
+    if j == -1:
+        print "x value outside data"
+        return -1
+
+    return Y[j] - Y[j] * (x - X[j]) / (X[j+1] - X[j]) + Y[j+1] * (x - X[j]) / (X[j+1] - X[j])
 
 
 ##def lagrange_fun_maker(X, Y, x):
