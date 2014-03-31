@@ -60,15 +60,16 @@ def makeCubicSpline(X, Y):
     # Copy Y
     A = [y for y in Y]
 
-    print "N: ", N
-    print "len(X): ", len(X)
+    #print "N: ", N
+    #print "len(X): ", len(X)
     
     # Step 1
     H = [ X[i+1] - X[i] for i in range(N-1) ]
-    print "len(H): ", len(H)
+    #print "len(H): ", len(H)
+
     # Step 2
     Alpha = [3.0/H[i] * (A[i+1] - A[i]) - 3.0/H[i-1] * (A[i] - A[i-1]) for i in range(1, N-1)]
-    print "len(Alpha): ", len(Alpha)
+    #print "len(Alpha): ", len(Alpha)
     
     # Step 3
     L = [1]
@@ -91,15 +92,15 @@ def makeCubicSpline(X, Y):
 
     # Step 6
     for j in reversed(range(N-1)):
-        print "j: ", j
+        #print "j: ", j
         C[j] = Z[j] - Mu[j] * C[j+1]
         B[j] = (A[j+1] - A[j]) / H[j] - H[j] * (C[j+1] + 2 * C[j]) / 3
         D[j] = (C[j+1] - C[j]) / (3*H[j])
 
-    print A
-    print B
-    print C
-    print D
+    #print A
+    #print B
+    #print C
+    #print D
     
     return A, B, C, D
 
@@ -128,25 +129,38 @@ def linearSplineInterpolate(X, Y, x):
     
     return Y[j] - Y[j] * (x - X[j]) / (X[j+1] - X[j]) + Y[j+1] * (x - X[j]) / (X[j+1] - X[j])
 
+def l_i_prime(X, i):
+    index = range(len(X))
+    index.remove(i)
+
+    return l_i_prime_recursion(X, i, 0, index)
+    
+
+def l_i_prime_recursion(X, i, j, index):
+
+    if j == len(index)-1:
+        #print "reached recursion end"
+        return 1
+    else:
+        #print "recursion:: j = ", j
+        #print "index: ", index[j+1: ]
+        #print "product: ", listProd( [ X[i]-X[k] for k in index[j+1: ] ]), "\n"
+        return listProd( [ X[i]-X[k] for k in index[j+1: ] ]) + (X[i]-X[j]) * l_i_prime_recursion(X, i, j+1, index)
+                    
+    
+def hermite_1_j(X, x):
+    pass
+
+    
+def hermite_2_j(X, x):
+    pass
+    
 
 ##def lagrange_fun_maker(X, Y, x):
 ##    N = len(X)
 ##    def temp(x):
 ##        return sum([Y[i]*lagrange_i(X, x, i) for i in range(N)])
 ##    return temp
-
-##def binary_search(X, x):
-##    N = len(X)
-##    if x == X[N/2]:
-##        return
-
-
-##def linearSpline(X, Y, x):
-##    if x > X[-1] or x < X[0]:
-##        print "Warning, this is an extrapolation"
-##
-##    for i, j in enumerate(X):
-##        if j <= x
 
 
     
@@ -189,7 +203,7 @@ Y_f = [f_prob3(x) for x in X_inter]
 # y values using scipy cubic interpolation
 f2 = interp1d(X, Y, kind='cubic')
 
-
+"""
 plt.plot(X, Y, "rs")
 plt.plot(X_inter, f2(X_inter), color = "red", label = "Scipy cubic")
 plt.plot(X_inter, Y_inter_L, color = "orange", label = "Lagrange")
@@ -198,8 +212,12 @@ plt.plot(X_inter, Y_inter_CS, color = "magenta", label = "Cubic Spline")
 plt.plot(X_inter, Y_inter_LS, color = "blue", label = "Linear spline")
 plt.legend(loc = "lower right")
 plt.show()
+"""
 
+print l_i_prime(X, 2)
 
-
+Z = [0,1,2,4]
+i = 2
+print l_i_prime(Z, i)
 
 
