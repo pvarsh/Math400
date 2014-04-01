@@ -132,22 +132,34 @@ def linearSplineInterpolate(X, Y, x):
 def l_i_prime(X, i):
     index = range(len(X))
     index.remove(i)
-    print "index: ", index
+    print "\nindex in l_i_prime: ", index
 
     return l_i_prime_recursion(X, i, 0, index)
     
 
 def l_i_prime_recursion(X, i, j, index):
-
-    if j == len(index)-1:
-        print "reached recursion end"
-        return (X[i] - X[-1]) + (X[i] - X[j])
+    if j == len(index) - 2:
+        return (X[i] - X[index[j]]) + X[i] - X[index[-1]]
     else:
-        print "recursion:: j = ", j
-        print "index: ", index[j+1: ]
-        print "product: ", listProd( [ X[i]-X[k] for k in index[j+1: ] ]), "\n"
-        return listProd( [ X[i]-X[k] for k in index[j+1: ] ]) + (X[i]-X[j]) * l_i_prime_recursion(X, i, j+1, index)
-                    
+        first_term = X[i] - X[index[j]]
+##def l_i_prime_recursion(X, i, j, index):
+##
+##    if j == len(index)-1:
+##        print "reached recursion end"
+##        return (X[i] - X[-1]) + (X[i] - X[j])
+##    else:
+##        print "recursion:: j = ", j
+##        print "index: ", index[j: ]
+##        
+##        first_summand_list = [ X[i] - X[k] for k in index[j: ] ]
+##        print "summing over index: ", index[j+1: ]
+##        print "first summand list: ", first_summand_list
+##        first_summand = listProd(first_summand_list)
+##        print "first summand: ", first_summand
+##        print "X[i] - X[j]: ", X[i], X[j]
+##
+##        return first_summand + (X[i]-X[j]) * l_i_prime_recursion(X, i, j+1, index)
+##                    
     
 def hermite_1_j(X, x, j):
     return (1 - 2*(x - X[j]) * l_i_prime(X, j) ) * lagrange_i(X, x, j)**2
@@ -250,7 +262,7 @@ def testing_recursion_quadratic():
     for i in range(len(X)):
         print l_i_prime(X, i)
 
-testing_recursion_quadratic()
+#testing_recursion_quadratic()
 
 def testing_recursion_cubic():
     X = [1.2, 1.5, 1.7]
@@ -258,6 +270,25 @@ def testing_recursion_cubic():
     print "derivatives: ", derivatives
     for i in range(len(X)):
         der = l_i_prime(X, i)
-        print "%s'th derivative: " %i, der
+        print "%s'th derivative:           " %i, der
+        print "%s'th derivative should be: " %i, derivatives[i]
 
-testing_recursion_cubic()
+# testing_recursion_cubic()
+
+def testing_recursion_4():
+    X = [1.1, 1.2, 1.5, 1.7]
+    a,b,c,d = X
+    x = 1.7
+    print 4*x**3
+    print 3*(a+b+c+d)*(x**2)
+    print 2*(a*b+a*c+a*d+b*c+b*d+c*d)*x
+    a*b*c + a*c*d + a*b*d + b*c*d
+    
+    derivatives = [4*x**3 - 3*(a+b+c+d)*x**2 + 2*(a*b+a*c+a*d+b*c+b*d+c*d)*x - (a*b*c + a*c*d + a*b*d + b*c*d) for x in X]
+    print "derivatives: ", derivatives
+    for i in range(len(X)):
+        der = l_i_prime(X, i)
+        print "%s'th derivative:           " %i, der
+        print "%s'th derivative should be: " %i, derivatives[i]
+
+testing_recursion_4()
