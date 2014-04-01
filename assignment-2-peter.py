@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from math import *
 from operator import mul
 from scipy.interpolate import interp1d # using this to compare with my interpolations
+from scipy.misc import derivative
 
 """
 Problem 3
@@ -21,6 +22,11 @@ Function definitions
 def listProd(X):
     "Returns the product of items in a list"
     return reduce(mul, X)
+
+def lagrange_i_denom(X, x, i):
+    index = range(len(X))
+    index.remove(i)
+    return listProd([X[i] - X[j] for j in index])
 
 def lagrange_i(X, x, i):
     "Returns L_i(x) using the product form formula from exercise 1"
@@ -132,16 +138,28 @@ def linearSplineInterpolate(X, Y, x):
 def l_i_prime(X, i):
     index = range(len(X))
     index.remove(i)
-    print "\nindex in l_i_prime: ", index
+    #print "\nindex in l_i_prime: ", index
 
     return l_i_prime_recursion(X, i, 0, index)
     
 
 def l_i_prime_recursion(X, i, j, index):
-    if j == len(index) - 2:
+    if j >= len(index) - 2:
+        #print "reached end of recursion"
         return (X[i] - X[index[j]]) + X[i] - X[index[-1]]
     else:
-        first_term = X[i] - X[index[j]]
+        #print "i (knocked out): ", i
+        #print "first term product: ", [k for k in index[j+1: ]]
+        first_term = listProd( [X[i] - X[k] for k in index[j+1: ] ] )
+        #print "first term: ", first_term
+        #print "first term product (%s - %s)*(%s - %s)" %(X[i], X[index[j+1]], X[i], X[index[-1]])
+
+        second_term = (X[i] - X[index[j]]) * l_i_prime_recursion(X, i, j+1, index)
+        #print "second term: ", second_term
+        
+        return first_term + second_term
+
+
 ##def l_i_prime_recursion(X, i, j, index):
 ##
 ##    if j == len(index)-1:
@@ -160,9 +178,25 @@ def l_i_prime_recursion(X, i, j, index):
 ##
 ##        return first_summand + (X[i]-X[j]) * l_i_prime_recursion(X, i, j+1, index)
 ##                    
-    
+
+
 def hermite_1_j(X, x, j):
-    return (1 - 2*(x - X[j]) * l_i_prime(X, j) ) * lagrange_i(X, x, j)**2
+    return (1 - 2*(x - X[j]) * l_i_prime(X, j)/lagrange_i_denom(X, x, j)) * lagrange_i(X, x, j)**2
+
+def hermite_1_j_scipy(X, x, j):
+    def poly(X, j, x):
+        index = range(len(X))
+        index.remove(j)
+        out = 1
+        for k in index:
+            out = out * (x - X[index[j]])
+        return out
+
+    print poly(X, j, x)
+    #der = derivative(poly(X, j, x), X[j], dx = 1e-6)
+    #return (1- 2*(x-X[j]) * l_i_prime(X, j) ) * lagrange_i(X, x, j)**2
+    
+
 
     
 def hermite_2_j(X, x, j):
@@ -170,6 +204,7 @@ def hermite_2_j(X, x, j):
 
 def hermite(X, Y, Yprime, x):
     return sum( [Y[j]*hermite_1_j(X, x, j) + Yprime[j]*hermite_2_j(X, x, j) for j in range(len(X))])
+    #return sum( [Y[j]*hermite_1_j_scipy(X, x, j) + Yprime[j]*hermite_2_j(X, x, j) for j in range(len(X))])
 
 ##def lagrange_fun_maker(X, Y, x):
 ##    N = len(X)
@@ -233,7 +268,7 @@ def exercise3():
     plt.legend(loc = "lower right")
     plt.show()
 
-# exercise3()
+exercise3()
 
 
 def example_1():
@@ -276,7 +311,9 @@ def testing_recursion_cubic():
 # testing_recursion_cubic()
 
 def testing_recursion_4():
+    print "TESTING RECURSION 4 TERMS"
     X = [1.1, 1.2, 1.5, 1.7]
+    print "X = ", X
     a,b,c,d = X
     x = 1.7
     print 4*x**3
@@ -284,11 +321,13 @@ def testing_recursion_4():
     print 2*(a*b+a*c+a*d+b*c+b*d+c*d)*x
     a*b*c + a*c*d + a*b*d + b*c*d
     
-    derivatives = [4*x**3 - 3*(a+b+c+d)*x**2 + 2*(a*b+a*c+a*d+b*c+b*d+c*d)*x - (a*b*c + a*c*d + a*b*d + b*c*d) for x in X]
-    print "derivatives: ", derivatives
+    #derivatives = [4*x**3 - 3*(a+b+c+d)*x**2 + 2*(a*b+a*c+a*d+b*c+b*d+c*d)*x - (a*b*c + a*c*d + a*b*d + b*c*d) for x in X]
+    #print "derivatives: ", derivatives
     for i in range(len(X)):
         der = l_i_prime(X, i)
         print "%s'th derivative:           " %i, der
-        print "%s'th derivative should be: " %i, derivatives[i]
+        #print "%s'th derivative should be: " %i, derivatives[i]
 
-testing_recursion_4()
+#testing_recursion_4()
+
+
