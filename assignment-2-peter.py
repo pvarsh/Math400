@@ -28,13 +28,15 @@ def lagrange_i_denom(X, x, i):
     index.remove(i)
     return listProd([X[i] - X[j] for j in index])
 
-def lagrange_i(X, x, i):
+def lagrange_i(X, x, i, verbose = False):
     "Returns L_i(x) using the product form formula from exercise 1"
     index = range(len(X))
     index.remove(i) # this makes sure denominator and numerator don't have (x_i - x_i)
 
     denom = listProd([X[i] - X[j] for j in index])
     numer = listProd([x - X[j] for j in index])
+    if verbose == True:
+        print "Lagrange_i:: i = %s, lagrange_i = %s" %(i, numer/denom)
     
     return numer/denom
 
@@ -42,7 +44,9 @@ def lagrange(X, Y, x):
     "Returns the Lagrange interpolation value at x"
     "Uses lagrange_i()"
     N = len(X)
-    return sum([Y[i]*lagrange_i(X, x, i) for i in range(N)])
+    out = sum([Y[i]*lagrange_i(X, x, i) for i in range(N)])
+    #print "lagrange interpolation at %s is %s" %(x, out)
+    return out
 
 def stupidSearch(X, x):
     "Returns the index of greatest element smaller than x"
@@ -78,9 +82,9 @@ def makeCubicSpline(X, Y):
     #print "len(Alpha): ", len(Alpha)
     
     # Step 3
-    L = [1]
+    L  = [1]
     Mu = [0]
-    Z = [0]
+    Z  = [0]
 
     # Step 4
     for i in range(1, N-1):
@@ -139,20 +143,32 @@ def l_i_prime(X, i):
     index = range(len(X))
     index.remove(i)
     #print "\nindex in l_i_prime: ", index
-
-    return l_i_prime_recursion(X, i, 0, index)
+    denom = lagrange_i_denom(X, X[i], i)
+    #print "l_i_prime:: denominator = %s" %denom
+    return l_i_prime_recursion(X, i, 0, index)/denom
     
 
 def l_i_prime_recursion(X, i, j, index):
+    #print "j = %s, len(index) = %s" %(j, len(index))
     if j >= len(index) - 2:
-        #print "reached end of recursion"
-        return (X[i] - X[index[j]]) + X[i] - X[index[-1]]
+        #print "entering the if"
+        
+        out = X[i] - X[index[j]] + X[i] - X[index[-1]]
+        
+        #print "%s - %s + %s - %s" %(X[i],X[index[j]],X[i],X[index[-1]])
+        #print "reached end of recursion, last term = %s" %out
+        return out
     else:
+        #print "entering the else"
         #print "i (knocked out): ", i
         #print "first term product: ", [k for k in index[j+1: ]]
+        list_first_term_prod = [X[i] - X[k] for k in index[j+1: ] ]
+        #print "list for first term: ", list_first_term_prod
+        
         first_term = listProd( [X[i] - X[k] for k in index[j+1: ] ] )
+        
         #print "first term: ", first_term
-        #print "first term product (%s - %s)*(%s - %s)" %(X[i], X[index[j+1]], X[i], X[index[-1]])
+        #print "first term product (%s - %s)*(%s - %s) = %s" %(X[i], X[index[j+1]], X[i], X[index[-1]], first_term)
 
         second_term = (X[i] - X[index[j]]) * l_i_prime_recursion(X, i, j+1, index)
         #print "second term: ", second_term
@@ -181,7 +197,9 @@ def l_i_prime_recursion(X, i, j, index):
 
 
 def hermite_1_j(X, x, j):
-    return (1 - 2*(x - X[j]) * l_i_prime(X, j)/lagrange_i_denom(X, x, j)) * lagrange_i(X, x, j)**2
+    out = (1 - 2*(x - X[j]) * l_i_prime(X, j)) * lagrange_i(X, x, j)**2
+    #print "hermite_1_j:: x = %s, j = %s, out = %s, lagrange_i = %s" %(x, j, out, lagrange_i(X, x, j))
+    return out
 
 def hermite_1_j_scipy(X, x, j):
     def poly(X, j, x):
@@ -200,10 +218,16 @@ def hermite_1_j_scipy(X, x, j):
 
     
 def hermite_2_j(X, x, j):
-    return (x - X[j]) * lagrange_i(X, x, j)**2
+    out = (x - X[j]) * lagrange_i(X, x, j)**2
+    #print "hermite_2_j:: x = %s, j = %s, out = %s, lagrange_i = %s" %(x, j, out, lagrange_i(X, x, j))
+    return out
+
 
 def hermite(X, Y, Yprime, x):
-    return sum( [Y[j]*hermite_1_j(X, x, j) + Yprime[j]*hermite_2_j(X, x, j) for j in range(len(X))])
+    #print "starting hermite for x = ", x
+    out = sum( [Y[j]*hermite_1_j(X, x, j) + Yprime[j]*hermite_2_j(X, x, j) for j in range(len(X))])
+    #print "Hermite interpolation for x = %s is %s" %(x, out)
+    return out
     #return sum( [Y[j]*hermite_1_j_scipy(X, x, j) + Yprime[j]*hermite_2_j(X, x, j) for j in range(len(X))])
 
 ##def lagrange_fun_maker(X, Y, x):
@@ -226,21 +250,28 @@ End function definitions
 Function calls
 """
 
-
 def exercise3():
     X = [0, 1.0/6, 1.0/3, 1.0/2, 7.0/12, 2.0/3, 3.0/4, 5.0/6, 11.0/12, 1]
     Y = [1.6 * exp(-2 * x) * sin(3*pi*x) for x in X]
-    Yprime = [-3.2 * exp(-2*x) * sin(3*pi*x) + 4.8 * exp(-2*x) * cos(3*pi*x) for x in X] # derivative for Hermitian
+    Yprime = [-3.2 * exp(-2*x) * sin(3*pi*x) + 4.8 * pi * exp(-2*x) * cos(3*pi*x) for x in X] # derivative for Hermitian
 
     A, B, C, D = makeCubicSpline(X, Y)
 
     # you can change this value to get a finer or coarser plot
-    M = 200 # this is the number of points used to construct interpolation graphs
+    M = 100 # this is the number of points used to construct interpolation graphs
 
     # x values for interpolation
     X_inter = [X[0] + (float(X[-1]) - X[0])/M * i for i in range(M + 1)]
 
     Y_inter_H = [hermite(X, Y, Yprime, x) for x in X_inter]
+
+    #Z = X[-3: ]
+    #print l_i_prime(Z, 4)
+    #print Z
+    #print X
+    #print l_i_prime(X, 4)
+    #hermite(X, Y, Yprime, 0.2)
+    #lagrange(X, Y, 0.2)
 
     # y values with Lagrange
     Y_inter_L = [lagrange(X, Y, x) for x in X_inter]
@@ -257,17 +288,17 @@ def exercise3():
     # y values using scipy cubic interpolation
     f2 = interp1d(X, Y, kind='cubic')
 
-
+    
     plt.plot(X, Y, "rs")
     #plt.plot(X_inter, f2(X_inter), color = "red", label = "Scipy cubic")
-    #plt.plot(X_inter, Y_inter_L, color = "orange", label = "Lagrange")
+    plt.plot(X_inter, Y_inter_L, color = "orange", label = "Lagrange")
     plt.plot(X_inter, Y_f, color = "cyan", label = r"$1.6e^{-2x}\sin(3\pi x)$")
-    #plt.plot(X_inter, Y_inter_CS, color = "magenta", label = "Cubic Spline")
-    #plt.plot(X_inter, Y_inter_LS, color = "blue", label = "Linear spline")
+    plt.plot(X_inter, Y_inter_CS, color = "magenta", label = "Cubic Spline")
+    plt.plot(X_inter, Y_inter_LS, color = "blue", label = "Linear spline")
     plt.plot(X_inter, Y_inter_H, color = "yellow", label = "Hermite")
     plt.legend(loc = "lower right")
     plt.show()
-
+    
 exercise3()
 
 
